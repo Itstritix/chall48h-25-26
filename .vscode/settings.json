@@ -1,0 +1,18 @@
+{
+    "workbench.editorAssociations": {
+        "*.html": "default",
+        "*.parquet": "duckdb.dataFileViewer",
+        "*.csv": "duckdb.dataFileViewer",
+        "*.tsv": "duckdb.dataFileViewer",
+        "*.xlsx": "duckdb.dataFileViewer"
+    },
+    "sqltools.connections": [
+        {
+            "previewLimit": 50,
+            "driver": "DuckDB",
+            "database": "C:\\Users\\ItsTr\\Downloads",
+            "name": "Test"
+        }
+    ],
+    "sqltools.useNodeRuntime": true
+}
