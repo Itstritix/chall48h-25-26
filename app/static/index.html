@@ -1,0 +1,1128 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Parkshare — Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#070b12;--bg2:#0d1220;--bg3:#111827;
+  --border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.12);
+  --accent:#c8f542;--accent2:#00d4ff;--accent3:#10b981;
+  --warn:#f59e0b;--danger:#ef4444;
+  --text:#e2e8f0;--text2:#94a3b8;--text3:#475569;
+  --card:rgba(255,255,255,0.03);--card-hover:rgba(255,255,255,0.06);
+  --font:'Syne',sans-serif;--mono:'JetBrains Mono',monospace;
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--font);overflow-x:hidden;min-height:100vh}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--accent);border-radius:2px}
+
+/* ── LOADING ── */
+#loading{position:fixed;inset:0;background:var(--bg);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px}
+.loader-logo{font-size:32px;font-weight:800;color:#fff;letter-spacing:-1px}
+.loader-logo span{color:var(--accent)}
+.loader-bar{width:240px;height:2px;background:var(--border2);border-radius:1px;overflow:hidden}
+.loader-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));width:0;animation:loadbar 1.8s ease-in-out forwards}
+@keyframes loadbar{0%{width:0}100%{width:100%}}
+.loader-text{font-family:var(--mono);font-size:11px;color:var(--text3);letter-spacing:2px}
+
+/* ── MODAL AIDE ── */
+#modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:500;display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+#modal-overlay.open{display:flex}
+.modal{background:var(--bg2);border:1px solid var(--border2);border-radius:14px;width:680px;max-width:90vw;max-height:85vh;overflow-y:auto;position:relative}
+.modal-header{padding:24px 28px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--bg2);z-index:1}
+.modal-title{font-size:16px;font-weight:800;color:#fff;letter-spacing:-0.5px}
+.modal-title span{color:var(--accent)}
+.modal-close{background:none;border:1px solid var(--border2);color:var(--text2);width:30px;height:30px;border-radius:6px;cursor:pointer;font-size:16px;transition:all .2s}
+.modal-close:hover{border-color:var(--accent);color:var(--accent)}
+.modal-body{padding:24px 28px;display:flex;flex-direction:column;gap:16px}
+
+/* Cards définitions dans la modal */
+.def-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:18px 20px}
+.def-card-header{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+.def-card-icon{font-size:20px}
+.def-card-title{font-size:13px;font-weight:700;color:var(--text)}
+.def-card-badge{font-family:var(--mono);font-size:9px;padding:2px 8px;border-radius:4px;letter-spacing:1px;margin-left:auto}
+.def-card-badge.lime{background:rgba(200,245,66,0.15);color:var(--accent);border:1px solid rgba(200,245,66,0.25)}
+.def-card-badge.cyan{background:rgba(0,212,255,0.15);color:var(--accent2);border:1px solid rgba(0,212,255,0.25)}
+.def-card-badge.warn{background:rgba(245,158,11,0.15);color:var(--warn);border:1px solid rgba(245,158,11,0.25)}
+.def-card-badge.green{background:rgba(16,185,129,0.15);color:var(--accent3);border:1px solid rgba(16,185,129,0.25)}
+.def-card-text{font-size:13px;color:var(--text2);line-height:1.7}
+.def-card-formula{font-family:var(--mono);font-size:11px;color:var(--text3);background:var(--bg3);padding:10px 14px;border-radius:6px;margin-top:10px;line-height:1.8}
+.def-card-formula strong{color:var(--accent)}
+
+/* Poids score */
+.score-weights{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.weight-row{display:flex;align-items:center;gap:12px}
+.weight-label{font-size:12px;color:var(--text2);width:220px;flex-shrink:0}
+.weight-bar-wrap{flex:1;height:6px;background:var(--border2);border-radius:3px;overflow:hidden}
+.weight-bar{height:100%;border-radius:3px;background:var(--accent)}
+.weight-pct{font-family:var(--mono);font-size:11px;color:var(--accent);width:36px;text-align:right;flex-shrink:0}
+
+/* Catégories score */
+.score-cats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:10px}
+.score-cat{border-radius:8px;padding:12px;text-align:center}
+.score-cat.high{background:rgba(200,245,66,0.08);border:1px solid rgba(200,245,66,0.2)}
+.score-cat.mid{background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.2)}
+.score-cat.low{background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2)}
+.score-cat-range{font-size:18px;font-weight:800;letter-spacing:-1px}
+.score-cat.high .score-cat-range{color:var(--accent)}
+.score-cat.mid .score-cat-range{color:var(--warn)}
+.score-cat.low .score-cat-range{color:var(--danger)}
+.score-cat-label{font-family:var(--mono);font-size:9px;color:var(--text3);letter-spacing:2px;text-transform:uppercase;margin-top:4px}
+.score-cat-desc{font-size:11px;color:var(--text2);margin-top:6px;line-height:1.5}
+
+/* ── SIDEBAR ── */
+.sidebar{width:260px;min-height:100vh;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;z-index:100;overflow-y:auto}
+.sidebar-logo{padding:24px 20px;border-bottom:1px solid var(--border)}
+.logo-eyebrow{font-family:var(--mono);font-size:9px;color:var(--accent);letter-spacing:4px;text-transform:uppercase;margin-bottom:6px}
+.logo-name{font-size:20px;font-weight:800;color:#fff;letter-spacing:-0.5px}
+.logo-name span{color:var(--accent)}
+.logo-sub{font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:3px}
+.nav-section{padding:20px 12px 0}
+.nav-label{font-family:var(--mono);font-size:9px;color:var(--text3);letter-spacing:3px;text-transform:uppercase;padding:0 8px;margin-bottom:6px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:6px;cursor:pointer;transition:all .2s;font-size:12px;font-weight:600;color:var(--text2);border:1px solid transparent;margin-bottom:2px;text-decoration:none}
+.nav-item:hover{background:var(--card-hover);color:var(--text);border-color:var(--border)}
+.nav-item.active{background:rgba(200,245,66,0.08);color:var(--accent);border-color:rgba(200,245,66,0.2)}
+.btn-help{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600;color:var(--accent2);border:1px solid rgba(0,212,255,0.2);background:rgba(0,212,255,0.05);margin-bottom:2px;transition:all .2s;width:100%}
+.btn-help:hover{background:rgba(0,212,255,0.1);border-color:rgba(0,212,255,0.4)}
+.filter-section{padding:16px 12px;margin-top:8px;flex:1}
+.filter-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px}
+.filter-heading{font-family:var(--mono);font-size:9px;color:var(--accent);letter-spacing:3px;text-transform:uppercase;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.filter-heading::before{content:'';width:14px;height:1px;background:var(--accent)}
+.filter-group{margin-bottom:14px}
+.filter-label{font-family:var(--mono);font-size:10px;color:var(--text3);display:flex;justify-content:space-between;margin-bottom:6px}
+.filter-val{color:var(--accent)}
+select{width:100%;background:var(--bg3);border:1px solid var(--border2);color:var(--text);border-radius:6px;font-family:var(--font);font-size:12px;padding:8px 10px;outline:none;cursor:pointer;appearance:none;transition:border-color .2s}
+select:focus{border-color:var(--accent)}
+select option{background:var(--bg3)}
+input[type=range]{width:100%;height:3px;background:var(--border2);border-radius:2px;outline:none;cursor:pointer;appearance:none;border:none;padding:0;accent-color:var(--accent)}
+.btn-reset{width:100%;margin-top:14px;padding:8px;background:transparent;border:1px solid var(--border2);color:var(--text2);border-radius:6px;font-family:var(--mono);font-size:10px;cursor:pointer;letter-spacing:2px;text-transform:uppercase;transition:all .2s}
+.btn-reset:hover{border-color:var(--accent);color:var(--accent);background:rgba(200,245,66,0.05)}
+.sidebar-back{padding:12px 20px;border-top:1px solid var(--border);font-family:var(--mono);font-size:10px;color:var(--text3);text-decoration:none;display:flex;align-items:center;gap:8px;transition:color .2s}
+.sidebar-back:hover{color:var(--text2)}
+
+/* ── MAIN ── */
+.main{margin-left:260px;padding:24px;min-width:0}
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
+.topbar-title{font-size:20px;font-weight:800;letter-spacing:-0.5px}
+.topbar-sub{font-family:var(--mono);font-size:10px;color:var(--text3);letter-spacing:2px;margin-top:4px}
+.status{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:10px;color:var(--text3)}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--accent3);box-shadow:0 0 8px var(--accent3);animation:blink 2s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* ── KPI CARDS ── */
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px}
+.kpi-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:18px 20px;transition:all .3s;position:relative;overflow:hidden;cursor:default}
+.kpi-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;opacity:0;transition:opacity .3s}
+.kpi-card.lime::after{background:linear-gradient(90deg,var(--accent),transparent)}
+.kpi-card.cyan::after{background:linear-gradient(90deg,var(--accent2),transparent)}
+.kpi-card.green::after{background:linear-gradient(90deg,var(--accent3),transparent)}
+.kpi-card.warn::after{background:linear-gradient(90deg,var(--warn),transparent)}
+.kpi-card:hover{border-color:var(--border2);background:var(--card-hover)}
+.kpi-card:hover::after{opacity:1}
+.kpi-label{font-family:var(--mono);font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:2px;margin-bottom:10px}
+.kpi-value{font-size:28px;font-weight:800;letter-spacing:-1px;line-height:1}
+.kpi-value.lime{color:var(--accent)}
+.kpi-value.cyan{color:var(--accent2)}
+.kpi-value.green{color:var(--accent3)}
+.kpi-value.warn{color:var(--warn)}
+.kpi-sub{font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:6px}
+
+/* ── PANELS ── */
+.panel{background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:20px}
+.panel-header{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.panel-title{font-size:11px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:2px}
+.panel-badge{font-family:var(--mono);font-size:9px;color:var(--accent);background:rgba(200,245,66,0.08);border:1px solid rgba(200,245,66,0.15);padding:3px 8px;border-radius:4px}
+.panel-body{padding:18px}
+
+/* ── MAP ── */
+#map{height:460px;background:var(--bg3)}
+.leaflet-container{background:#0a0f1a!important;font-family:var(--font)!important}
+.map-tooltip{background:#0d1220!important;border:1px solid rgba(255,255,255,0.12)!important;color:#e2e8f0!important;font-family:'Syne',sans-serif!important;border-radius:8px!important;padding:12px 14px!important;font-size:12px!important;box-shadow:0 8px 32px rgba(0,0,0,0.6)!important;line-height:1.8!important}
+
+/* ── PANNEAU DÉTAIL COMMUNE ── */
+#detail-panel{position:fixed;right:-400px;top:0;width:380px;height:100vh;background:var(--bg2);border-left:1px solid var(--border2);z-index:200;transition:right .35s cubic-bezier(.16,1,.3,1);display:flex;flex-direction:column;overflow-y:auto}
+#detail-panel.open{right:0}
+.detail-header{padding:20px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;position:sticky;top:0;background:var(--bg2);z-index:1}
+.detail-commune{font-size:18px;font-weight:800;color:#fff;letter-spacing:-0.5px;margin-bottom:4px}
+.detail-region{font-family:var(--mono);font-size:10px;color:var(--text3);letter-spacing:2px;text-transform:uppercase}
+.detail-close{background:none;border:1px solid var(--border2);color:var(--text2);width:28px;height:28px;border-radius:6px;cursor:pointer;font-size:14px;transition:all .2s;flex-shrink:0}
+.detail-close:hover{border-color:var(--accent);color:var(--accent)}
+
+.detail-score-block{padding:20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:16px}
+.detail-score-circle{width:72px;height:72px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-direction:column;flex-shrink:0}
+.detail-score-circle.high{border:2px solid var(--accent);background:rgba(200,245,66,0.06)}
+.detail-score-circle.mid{border:2px solid var(--warn);background:rgba(245,158,11,0.06)}
+.detail-score-circle.low{border:2px solid var(--danger);background:rgba(239,68,68,0.06)}
+.detail-score-num{font-size:22px;font-weight:800;line-height:1}
+.detail-score-circle.high .detail-score-num{color:var(--accent)}
+.detail-score-circle.mid .detail-score-num{color:var(--warn)}
+.detail-score-circle.low .detail-score-num{color:var(--danger)}
+.detail-score-max{font-family:var(--mono);font-size:9px;color:var(--text3)}
+.detail-score-label{font-family:var(--mono);font-size:9px;color:var(--text3);letter-spacing:2px;text-transform:uppercase;margin-bottom:4px}
+.detail-score-cat{font-size:13px;font-weight:700}
+.detail-score-cat.high{color:var(--accent)}
+.detail-score-cat.mid{color:var(--warn)}
+.detail-score-cat.low{color:var(--danger)}
+.detail-score-expl{font-size:11px;color:var(--text3);margin-top:4px;line-height:1.5}
+
+.detail-kpis{padding:16px;display:flex;flex-direction:column;gap:10px}
+.dkpi{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:14px}
+.dkpi-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.dkpi-label{font-family:var(--mono);font-size:9px;color:var(--text3);letter-spacing:2px;text-transform:uppercase}
+.dkpi-val{font-size:17px;font-weight:800;letter-spacing:-0.5px}
+.dkpi-val.lime{color:var(--accent)}
+.dkpi-val.cyan{color:var(--accent2)}
+.dkpi-val.warn{color:var(--warn)}
+.dkpi-val.green{color:var(--accent3)}
+.dkpi-desc{font-size:11px;color:var(--text3);line-height:1.5;margin-bottom:8px}
+.dkpi-bar{height:3px;background:var(--border2);border-radius:2px;overflow:hidden}
+.dkpi-bar-fill{height:100%;border-radius:2px;transition:width .6s cubic-bezier(.16,1,.3,1)}
+
+/* ── GRILLES ── */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.grid-3{display:grid;grid-template-columns:2fr 1fr;gap:20px}
+
+/* ── TABLE ── */
+.table-wrap{overflow-x:auto;max-height:380px;overflow-y:auto}
+table{width:100%;border-collapse:collapse;font-size:12px}
+thead th{padding:10px 12px;text-align:left;background:var(--bg3);font-family:var(--mono);font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:1px;position:sticky;top:0;z-index:1;border-bottom:1px solid var(--border2);cursor:help;white-space:nowrap}
+thead th[title]{position:relative}
+thead th .tip-icon{font-size:10px;opacity:0.5;margin-left:2px}
+thead th[title]:hover::after{content:attr(title);position:absolute;top:100%;left:50%;transform:translateX(-50%);background:#0d1220;border:1px solid var(--border2);color:var(--text2);font-family:var(--mono);font-size:10px;padding:8px 12px;border-radius:6px;white-space:nowrap;z-index:100;margin-top:4px;font-weight:400;letter-spacing:0;text-transform:none;box-shadow:0 8px 24px rgba(0,0,0,.5);min-width:200px;max-width:280px;white-space:normal}
+tbody td{padding:10px 14px;border-bottom:1px solid var(--border);color:var(--text2);transition:background .15s}
+tbody tr{cursor:pointer}
+tbody tr:hover td{background:var(--card-hover);color:var(--text)}
+.rank-num{font-family:var(--mono);color:var(--text3);font-size:11px}
+.badge{display:inline-block;padding:2px 8px;border-radius:4px;font-family:var(--mono);font-size:10px}
+.badge-high{background:rgba(200,245,66,0.15);color:var(--accent);border:1px solid rgba(200,245,66,0.25)}
+.badge-mid{background:rgba(245,158,11,0.15);color:var(--warn);border:1px solid rgba(245,158,11,0.25)}
+.badge-low{background:rgba(239,68,68,0.15);color:var(--danger);border:1px solid rgba(239,68,68,0.25)}
+.chip{font-family:var(--mono);font-size:10px;color:var(--text3);background:var(--bg3);padding:2px 6px;border-radius:3px}
+
+/* ── CHARTS ── */
+.chart-wrap{position:relative;height:280px}
+.chart-wrap-sm{position:relative;height:240px}
+
+/* ── FADE ── */
+.fade{opacity:0;transform:translateY(16px);transition:all .5s cubic-bezier(.16,1,.3,1)}
+.fade.in{opacity:1;transform:none}
+
+@media(max-width:1200px){.kpi-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:960px){.sidebar{width:200px}.main{margin-left:200px}.grid-2,.grid-3{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div id="loading">
+  <div class="loader-logo">Park<span>share</span></div>
+  <div class="loader-bar"><div class="loader-fill"></div></div>
+  <div class="loader-text">Connexion base · Chargement données...</div>
+</div>
+
+<!-- ================================================================
+     MODAL AIDE — Explication du score et des termes
+     ================================================================ -->
+<div id="modal-overlay" onclick="closeModal(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-title">📖 Comprendre le <span>dashboard</span></div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+
+      <!-- Score potentiel -->
+      <div class="def-card">
+        <div class="def-card-header">
+          <div class="def-card-icon">🎯</div>
+          <div class="def-card-title">Score potentiel commercial</div>
+          <div class="def-card-badge lime">0 — 100</div>
+        </div>
+        <div class="def-card-text">
+          Le score potentiel mesure l'attractivité commerciale d'une commune pour Parkshare.
+          Plus le score est élevé, plus la commune est prioritaire pour la prospection.
+          Il est calculé à partir de 5 variables pondérées :
+        </div>
+        <div class="score-weights">
+          <div class="weight-row">
+            <div class="weight-label">Taille moyenne des copropriétés</div>
+            <div class="weight-bar-wrap"><div class="weight-bar" style="width:25%"></div></div>
+            <div class="weight-pct">25%</div>
+          </div>
+          <div class="weight-row">
+            <div class="weight-label">Taux de motorisation</div>
+            <div class="weight-bar-wrap"><div class="weight-bar" style="width:20%"></div></div>
+            <div class="weight-pct">20%</div>
+          </div>
+          <div class="weight-row">
+            <div class="weight-label">Part de logements collectifs</div>
+            <div class="weight-bar-wrap"><div class="weight-bar" style="width:20%"></div></div>
+            <div class="weight-pct">20%</div>
+          </div>
+          <div class="weight-row">
+            <div class="weight-label">Concentration syndic professionnel</div>
+            <div class="weight-bar-wrap"><div class="weight-bar" style="width:20%"></div></div>
+            <div class="weight-pct">20%</div>
+          </div>
+          <div class="weight-row">
+            <div class="weight-label">Part logements OPH / ESH (HLM)</div>
+            <div class="weight-bar-wrap"><div class="weight-bar" style="width:15%"></div></div>
+            <div class="weight-pct">15%</div>
+          </div>
+        </div>
+        <div class="score-cats">
+          <div class="score-cat high">
+            <div class="score-cat-range">&ge; 42</div>
+            <div class="score-cat-label">Élevé 🟢</div>
+            <div class="score-cat-desc">Top 30% — prospecter en priorité</div>
+          </div>
+          <div class="score-cat mid">
+            <div class="score-cat-range">24 – 41</div>
+            <div class="score-cat-label">Moyen 🟡</div>
+            <div class="score-cat-desc">Potentiel modéré — à surveiller</div>
+          </div>
+          <div class="score-cat low">
+            <div class="score-cat-range">&lt; 24</div>
+            <div class="score-cat-label">Faible 🔴</div>
+            <div class="score-cat-desc">Peu prioritaire pour la prospection</div>
+          </div>
+        </div>
+        <div style="margin-top:12px;padding:10px 14px;background:var(--bg3);border-radius:6px;font-family:var(--mono);font-size:10px;color:var(--text3);line-height:1.7">
+          ℹ️ Seuils <strong style="color:var(--accent)">dynamiques</strong> basés sur le vrai max de tes données (~59/100). Les catégories s'adaptent automatiquement.
+        </div>
+      </div>
+
+      <!-- Part HLM -->
+      <div class="def-card">
+        <div class="def-card-header">
+          <div class="def-card-icon">🏗️</div>
+          <div class="def-card-title">Part HLM (logements sociaux)</div>
+          <div class="def-card-badge warn">OPH / ESH</div>
+        </div>
+        <div class="def-card-text">
+          Pourcentage de logements gérés par un Office Public de l'Habitat (OPH) ou une
+          Entreprise Sociale pour l'Habitat (ESH). Ces bailleurs sont propriétaires à 100%
+          de leurs bâtiments — ils peuvent déployer Parkshare sur simple décision interne,
+          sans vote en assemblée générale. <strong style="color:#e2e8f0">Un seul directeur général = N résidences couvertes.</strong>
+        </div>
+      </div>
+
+      <!-- Concentration syndic -->
+      <div class="def-card">
+        <div class="def-card-header">
+          <div class="def-card-icon">🏢</div>
+          <div class="def-card-title">Concentration syndic</div>
+          <div class="def-card-badge cyan">Multiplicateur commercial</div>
+        </div>
+        <div class="def-card-text">
+          Pourcentage de copropriétés d'une commune gérées par le même syndic professionnel.
+          Un taux élevé signifie qu'un seul rendez-vous commercial avec ce syndic peut
+          déclencher des dizaines de déploiements simultanés.
+          <strong style="color:#e2e8f0">C'est la variable la plus différenciante du scoring Parkshare.</strong>
+        </div>
+      </div>
+
+      <!-- Taux de motorisation -->
+      <div class="def-card">
+        <div class="def-card-header">
+          <div class="def-card-icon">🚗</div>
+          <div class="def-card-title">Taux de motorisation</div>
+          <div class="def-card-badge green">Validation du besoin</div>
+        </div>
+        <div class="def-card-text">
+          Nombre moyen de voitures par ménage dans la commune. Sans voiture, il n'y a pas
+          de besoin de stationnement — ce taux valide que le produit Parkshare a une utilité
+          réelle pour les résidents de la commune.
+        </div>
+      </div>
+
+      <!-- Copropriétés -->
+      <div class="def-card">
+        <div class="def-card-header">
+          <div class="def-card-icon">🏘️</div>
+          <div class="def-card-title">Nombre de copropriétés</div>
+          <div class="def-card-badge lime">Taille du marché</div>
+        </div>
+        <div class="def-card-text">
+          Nombre total de copropriétés identifiées dans la commune via le registre national.
+          Détermine la taille du marché adressable — plus ce chiffre est élevé, plus
+          le potentiel de revenus est important pour Parkshare.
+        </div>
+      </div>
+
+      <!-- Syndic dominant -->
+      <div class="def-card">
+        <div class="def-card-header">
+          <div class="def-card-icon">📋</div>
+          <div class="def-card-title">Syndic dominant</div>
+          <div class="def-card-badge cyan">Interlocuteur prioritaire</div>
+        </div>
+        <div class="def-card-text">
+          Le gestionnaire de copropriété le plus présent dans la commune.
+          C'est votre interlocuteur commercial prioritaire — en signant un accord avec lui,
+          vous accédez à l'ensemble des copropriétés qu'il gère dans la zone.
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- PANNEAU DÉTAIL COMMUNE -->
+<div id="detail-panel">
+  <div class="detail-header">
+    <div>
+      <div class="detail-commune" id="dp-commune">—</div>
+      <div class="detail-region" id="dp-region">—</div>
+    </div>
+    <button class="detail-close" onclick="closeDetail()">✕</button>
+  </div>
+  <div class="detail-score-block">
+    <div class="detail-score-circle" id="dp-circle">
+      <div class="detail-score-num" id="dp-score">—</div>
+      <div class="detail-score-max">/100</div>
+    </div>
+    <div>
+      <div class="detail-score-label">Score potentiel</div>
+      <div class="detail-score-cat" id="dp-cat">—</div>
+      <div class="detail-score-expl" id="dp-expl">—</div>
+    </div>
+  </div>
+  <div class="detail-kpis">
+    <div class="dkpi">
+      <div class="dkpi-top"><div class="dkpi-label">Copropriétés</div><div class="dkpi-val lime" id="dp-copros">—</div></div>
+      <div class="dkpi-desc">Taille du marché adressable dans cette commune.</div>
+    </div>
+    <div class="dkpi">
+      <div class="dkpi-top"><div class="dkpi-label">Part HLM</div><div class="dkpi-val warn" id="dp-hlm">—</div></div>
+      <div class="dkpi-desc">% logements OPH/ESH — déploiement sans vote en AG.</div>
+      <div class="dkpi-bar"><div class="dkpi-bar-fill" id="dp-hlm-bar" style="background:var(--warn);width:0"></div></div>
+    </div>
+    <div class="dkpi">
+      <div class="dkpi-top"><div class="dkpi-label">Concentration syndic</div><div class="dkpi-val cyan" id="dp-syndic-pct">—</div></div>
+      <div class="dkpi-desc">% copros sous le même syndic — effet multiplicateur.</div>
+      <div class="dkpi-bar"><div class="dkpi-bar-fill" id="dp-syndic-bar" style="background:var(--accent2);width:0"></div></div>
+    </div>
+    <div class="dkpi">
+      <div class="dkpi-top"><div class="dkpi-label">Syndic dominant</div><div class="dkpi-val" id="dp-syndic-name" style="font-size:12px;color:var(--text)">—</div></div>
+      <div class="dkpi-desc">Votre interlocuteur commercial prioritaire dans cette zone.</div>
+    </div>
+    <div class="dkpi">
+      <div class="dkpi-top"><div class="dkpi-label">Taux motorisation</div><div class="dkpi-val green" id="dp-moto">—</div></div>
+      <div class="dkpi-desc">Voitures/ménage — valide le besoin de stationnement.</div>
+      <div class="dkpi-bar"><div class="dkpi-bar-fill" id="dp-moto-bar" style="background:var(--accent3);width:0"></div></div>
+    </div>
+    <div class="dkpi">
+      <div class="dkpi-top"><div class="dkpi-label">Logements collectifs</div><div class="dkpi-val" id="dp-collectif" style="color:var(--text)">—</div></div>
+      <div class="dkpi-desc">% en immeuble collectif — filtre les zones hors cible.</div>
+      <div class="dkpi-bar"><div class="dkpi-bar-fill" id="dp-collectif-bar" style="background:var(--text2);width:0"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-eyebrow">Dashboard</div>
+    <div class="logo-name">Park<span>share</span></div>
+    <div class="logo-sub">Prospection · 2026</div>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">Vues</div>
+    <a class="nav-item active" href="#section-map" onclick="setActive(this)"><span>🗺️</span> Carte scoring</a>
+    <a class="nav-item" href="#section-top20" onclick="setActive(this)"><span>🏆</span> Top 20 zones</a>
+    <a class="nav-item" href="#section-charts" onclick="setActive(this)"><span>📊</span> KPIs & graphiques</a>
+    <div style="margin-top:8px">
+      <button class="btn-help" onclick="openModal()"><span>❓</span> Comprendre le score</button>
+    </div>
+  </div>
+  <div class="filter-section">
+    <div class="filter-card">
+      <div class="filter-heading">Filtres</div>
+      <div class="filter-group">
+        <div class="filter-label">Région</div>
+        <select id="f-region" onchange="applyFilters()"><option value="">Toutes les régions</option></select>
+      </div>
+      <div class="filter-group">
+        <div class="filter-label">Score min <span class="filter-val" id="val-min">0</span></div>
+        <input type="range" id="f-score-min" min="0" max="100" value="0" oninput="document.getElementById('val-min').textContent=this.value" onchange="applyFilters()">
+      </div>
+      <div class="filter-group">
+        <div class="filter-label">Score max <span class="filter-val" id="val-max">100</span></div>
+        <input type="range" id="f-score-max" min="0" max="100" value="100" oninput="document.getElementById('val-max').textContent=this.value" onchange="applyFilters()">
+      </div>
+      <div class="filter-group">
+        <div class="filter-label">Syndic dominant</div>
+        <select id="f-syndic" onchange="applyFilters()"><option value="">Tous les syndics</option></select>
+      </div>
+      <button class="btn-reset" onclick="resetFilters()">↺ Réinitialiser</button>
+    </div>
+  </div>
+  <a href="/" class="sidebar-back">← Retour au rapport</a>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+  <div class="topbar fade">
+    <div>
+      <div class="topbar-title">Dashboard Prospection</div>
+      <div class="topbar-sub">Parkshare · Étude de marché France 2026</div>
+    </div>
+    <div class="status"><div class="dot"></div> Base connectée · Données en direct</div>
+  </div>
+
+  <div class="kpi-grid">
+    <div class="kpi-card lime fade"><div class="kpi-label">Communes analysées</div><div class="kpi-value lime" id="kpi-communes">—</div><div class="kpi-sub">dans le périmètre filtré</div></div>
+    <div class="kpi-card cyan fade"><div class="kpi-label">Score moyen</div><div class="kpi-value cyan" id="kpi-score">—</div><div class="kpi-sub">sur 100 points</div></div>
+    <div class="kpi-card green fade"><div class="kpi-label">Copropriétés totales</div><div class="kpi-value green" id="kpi-copros">—</div><div class="kpi-sub">lots identifiés</div></div>
+    <div class="kpi-card warn fade"><div class="kpi-label">Zones prioritaires</div><div class="kpi-value warn" id="kpi-zones">—</div><div class="kpi-sub" id="kpi-zones-sub">score ≥ seuil dynamique</div></div>
+  </div>
+
+  <div class="panel fade" id="section-map">
+    <div class="panel-header">
+      <div class="panel-title">Carte de scoring</div>
+      <div class="panel-badge">🖱️ Cliquer une zone pour voir le détail</div>
+    </div>
+    <div id="map"></div>
+  </div>
+
+  <div class="grid-3" id="section-top20">
+    <div class="panel fade">
+      <div class="panel-header">
+        <div class="panel-title">Top 20 zones prioritaires</div>
+        <div class="panel-badge">Cliquer une ligne pour le détail</div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:36px">#</th>
+              <th style="width:160px">Commune</th>
+              <th style="width:130px">Région</th>
+              <th style="width:80px" title="Score de potentiel commercial (0–100). Combinaison de 5 variables : taille des copros, motorisation, logements collectifs, concentration syndic, part HLM. Cliquer sur 'Comprendre le score' dans le menu.">Score ⓘ</th>
+              <th style="width:70px" title="Nombre total de copropriétés identifiées dans cette commune. Plus ce chiffre est élevé, plus le marché adressable est grand.">Copros ⓘ</th>
+              <th style="width:70px" title="Part de logements gérés par un OPH ou ESH (bailleur social). Un taux élevé = déploiement rapide sans vote en assemblée générale.">HLM % ⓘ</th>
+              <th>Syndic dominant ⓘ</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-top20"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="panel fade">
+      <div class="panel-header"><div class="panel-title">Score moyen / région</div><div class="panel-badge">Agrégat</div></div>
+      <div class="panel-body"><div class="chart-wrap"><canvas id="chart-regions"></canvas></div></div>
+    </div>
+  </div>
+
+  <div class="grid-2" id="section-charts">
+    <div class="panel fade">
+      <div class="panel-header"><div class="panel-title">Distribution des scores</div><div class="panel-badge">KPI 1 · Histogramme</div></div>
+      <div class="panel-body"><div class="chart-wrap-sm"><canvas id="chart-distrib"></canvas></div></div>
+    </div>
+    <div class="panel fade">
+      <div class="panel-header"><div class="panel-title">Top 15 zones par score</div><div class="panel-badge">KPI 3 · Score + Syndic dominant</div></div>
+      <div class="panel-body"><div class="chart-wrap-sm"><canvas id="chart-syndic"></canvas></div></div>
+    </div>
+    <div class="panel fade" style="grid-column:1/-1">
+      <div class="panel-header"><div class="panel-title">Part HLM vs Score potentiel</div><div class="panel-badge">KPI 4 · Scatter — survoler un point pour voir la commune</div></div>
+      <div class="panel-body"><div class="chart-wrap"><canvas id="chart-scatter"></canvas></div></div>
+    </div>
+    <!-- MATRICE OPPORTUNITÉ / VITESSE -->
+    <div class="panel fade" style="grid-column:1/-1">
+      <div class="panel-header">
+        <div class="panel-title">Matrice Opportunité / Vitesse</div>
+        <div class="panel-badge">Bonus 2 · Score potentiel × Part HLM</div>
+      </div>
+      <div class="panel-body">
+
+        <!-- Les 4 étapes -->
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:28px">
+          <div style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:16px">
+            <div style="font-family:var(--mono);font-size:10px;color:var(--accent);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px">Étape 1 · KPI 1</div>
+            <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:6px">Score potentiel</div>
+            <div style="font-size:12px;color:var(--text3);line-height:1.6">On score toutes les communes (0–100) → On sait <strong style="color:var(--text2)">QUELLES</strong> zones sont intéressantes</div>
+          </div>
+          <div style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:16px">
+            <div style="font-family:var(--mono);font-size:10px;color:var(--accent);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px">Étape 2 · KPI 2</div>
+            <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:6px">Top 20 zones</div>
+            <div style="font-size:12px;color:var(--text3);line-height:1.6">On classe les meilleures communes → On sait <strong style="color:var(--text2)">OÙ</strong> concentrer les efforts commerciaux</div>
+          </div>
+          <div style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:16px">
+            <div style="font-family:var(--mono);font-size:10px;color:var(--accent);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px">Étape 3 · KPI 3</div>
+            <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:6px">Concentration syndic</div>
+            <div style="font-size:12px;color:var(--text3);line-height:1.6">Dans ces zones, quel % sous même syndic ? → On sait <strong style="color:var(--text2)">AVEC QUI</strong> négocier (1 RDV = N immeubles)</div>
+          </div>
+          <div style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:16px">
+            <div style="font-family:var(--mono);font-size:10px;color:var(--accent);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px">Étape 4 · KPI 4</div>
+            <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:6px">Part HLM</div>
+            <div style="font-size:12px;color:var(--text3);line-height:1.6">Dans ces zones, combien de logements sociaux ? → On sait <strong style="color:var(--text2)">QUAND</strong> déployer (OPH/ESH = pas de vote AG)</div>
+          </div>
+        </div>
+
+        <!-- Matrice scatter -->
+        <div style="position:relative">
+          <!-- Quadrants labels -->
+          <div style="position:absolute;top:8px;right:8px;font-family:var(--mono);font-size:10px;color:var(--accent);opacity:0.6;letter-spacing:1px;text-transform:uppercase">
+            ★ Cible idéale
+          </div>
+          <div style="position:absolute;top:8px;left:8px;font-family:var(--mono);font-size:10px;color:var(--text3);letter-spacing:1px;text-transform:uppercase">
+            Déploiement rapide<br>mais moins rentable
+          </div>
+          <div style="position:absolute;bottom:32px;right:8px;font-family:var(--mono);font-size:10px;color:var(--text3);letter-spacing:1px;text-transform:uppercase">
+            Très rentable<br>mais déploiement lent
+          </div>
+          <div style="position:absolute;bottom:32px;left:8px;font-family:var(--mono);font-size:10px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;opacity:0.5">
+            Peu prioritaire
+          </div>
+          <div class="chart-wrap" style="height:420px">
+            <canvas id="chart-matrix"></canvas>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+// ================================================================
+// ÉTAT GLOBAL
+// ================================================================
+let geojsonFull=null, mapInstance=null, mapLayer=null, charts={};
+let communesCache=[], scoreMax=100;
+
+// ================================================================
+// MODAL AIDE
+// ================================================================
+function openModal(){document.getElementById('modal-overlay').classList.add('open')}
+function closeModal(e){if(!e||e.target===document.getElementById('modal-overlay'))document.getElementById('modal-overlay').classList.remove('open')}
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal();closeDetail()}});
+
+// ================================================================
+// PANNEAU DÉTAIL
+// ================================================================
+function openDetail(props) {
+  const score = +(props.score_potentiel||0);
+  const max   = scoreMax || 100;
+  // Seuils dynamiques basés sur les données réelles
+  const highThreshold = max * 0.7;
+  const midThreshold  = max * 0.4;
+  const cat   = score>=highThreshold ? 'Élevé' : score>=midThreshold ? 'Moyen' : 'Faible';
+  const cls   = score>=highThreshold ? 'high'  : score>=midThreshold ? 'mid'   : 'low';
+  const expls = {
+    'Élevé':  'Zone prioritaire — prospecter en premier.',
+    'Moyen':  'Zone à potentiel modéré — à surveiller.',
+    'Faible': 'Zone peu prioritaire pour la prospection.'
+  };
+
+  document.getElementById('dp-commune').textContent = props.nom_commune||'—';
+  document.getElementById('dp-region').textContent  = `${props.departement||''} · ${props.region||''}`;
+  document.getElementById('dp-score').textContent   = score.toFixed(1);
+
+  const circle = document.getElementById('dp-circle');
+  circle.className = `detail-score-circle ${cls}`;
+  const catEl = document.getElementById('dp-cat');
+  catEl.textContent = `Zone ${cat}`;
+  catEl.className   = `detail-score-cat ${cls}`;
+  document.getElementById('dp-expl').textContent = expls[cat];
+
+  document.getElementById('dp-copros').textContent      = (props.nb_coproprietes||0).toLocaleString('fr-FR');
+  document.getElementById('dp-hlm').textContent         = props.part_hlm ? (props.part_hlm*100).toFixed(1)+'%' : '—';
+  document.getElementById('dp-syndic-pct').textContent  = props.indice_concentration_syndic ? (props.indice_concentration_syndic*100).toFixed(1)+'%' : '—';
+  document.getElementById('dp-syndic-name').textContent = props.syndic_dominant||'—';
+  document.getElementById('dp-moto').textContent        = props.taux_motorisation ? props.taux_motorisation.toFixed(2)+' voit/mén.' : '—';
+  document.getElementById('dp-collectif').textContent   = props.part_appartements ? (props.part_appartements*100).toFixed(1)+'%' : '—';
+
+  setTimeout(()=>{
+    document.getElementById('dp-hlm-bar').style.width    = props.part_hlm ? Math.min(props.part_hlm*100,100)+'%' : '0%';
+    document.getElementById('dp-syndic-bar').style.width = props.indice_concentration_syndic ? Math.min(props.indice_concentration_syndic*100,100)+'%' : '0%';
+    document.getElementById('dp-moto-bar').style.width   = props.taux_motorisation ? Math.min(props.taux_motorisation*100,100)+'%' : '0%';
+    document.getElementById('dp-collectif-bar') && (document.getElementById('dp-collectif-bar').style.width = props.part_appartements ? Math.min(props.part_appartements*100,100)+'%':'0%');
+  },100);
+
+  document.getElementById('detail-panel').classList.add('open');
+}
+function closeDetail(){document.getElementById('detail-panel').classList.remove('open')}
+
+// ================================================================
+// CHART.JS DEFAULTS
+// ================================================================
+const CD={
+  responsive:true,maintainAspectRatio:false,
+  plugins:{legend:{display:false},tooltip:{backgroundColor:'#0d1220',borderColor:'rgba(255,255,255,0.1)',borderWidth:1,titleColor:'#e2e8f0',bodyColor:'#94a3b8',padding:10,cornerRadius:6,titleFont:{family:'Syne',size:12,weight:'700'},bodyFont:{family:'JetBrains Mono',size:11}}},
+  scales:{x:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#475569',font:{family:'JetBrains Mono',size:10}}},y:{grid:{color:'rgba(255,255,255,0.04)'},ticks:{color:'#475569',font:{family:'JetBrains Mono',size:10}}}}
+};
+
+// ================================================================
+// FETCH
+// ================================================================
+async function fetchCommunes(params={}){
+  const url=new URL('/api/communes',location.origin);
+  Object.entries(params).forEach(([k,v])=>{if(v!==''&&v!==null)url.searchParams.set(k,v)});
+  return (await fetch(url)).json();
+}
+function getFilters(){return{region:document.getElementById('f-region').value,score_min:document.getElementById('f-score-min').value,score_max:document.getElementById('f-score-max').value,syndic:document.getElementById('f-syndic').value}}
+
+// ================================================================
+// FILTRES
+// ================================================================
+async function initFiltres(){
+  const data=await(await fetch('/api/filtres')).json();
+  const selR=document.getElementById('f-region');
+  data.regions.forEach(r=>{const o=document.createElement('option');o.value=r;o.textContent=r;selR.appendChild(o)});
+  const selS=document.getElementById('f-syndic');
+  data.syndics.slice(0,50).forEach(s=>{const o=document.createElement('option');o.value=s;o.textContent=s;selS.appendChild(o)});
+}
+
+async function applyFilters(){
+  const f=getFilters();
+  const communes=await fetchCommunes(f);
+  communesCache=communes;
+  updateKPIs(communes);
+  const codes=new Set(communes.map(c=>String(c.code_commune)));
+  renderMapLayer({type:'FeatureCollection',features:geojsonFull.features.filter(ft=>codes.has(String(ft.properties.code_commune)))});
+  const url=new URL('/api/classement',location.origin);
+  Object.entries(f).forEach(([k,v])=>{if(v!=='')url.searchParams.set(k,v)});
+  url.searchParams.set('limit',20);
+  renderTop20(await(await fetch(url)).json());
+}
+
+function resetFilters(){
+  document.getElementById('f-region').value='';
+  document.getElementById('f-syndic').value='';
+  document.getElementById('f-score-min').value=0;
+  document.getElementById('f-score-max').value=100;
+  document.getElementById('val-min').textContent='0';
+  document.getElementById('val-max').textContent='100';
+  fetchCommunes().then(d=>{communesCache=d;updateKPIs(d)});
+  renderMapLayer(geojsonFull);
+  initTop20();
+  closeDetail();
+}
+
+// ================================================================
+// KPI CARDS — seuil dynamique basé sur le vrai max des données
+// ================================================================
+function updateKPIs(data){
+  document.getElementById('kpi-communes').textContent=data.length.toLocaleString('fr-FR');
+  const avg=data.reduce((s,c)=>s+(c.score_potentiel||0),0)/(data.length||1);
+  document.getElementById('kpi-score').textContent=avg.toFixed(1);
+  document.getElementById('kpi-copros').textContent=data.reduce((s,c)=>s+(c.nb_coproprietes||0),0).toLocaleString('fr-FR');
+
+  // Seuil dynamique = top 30% des scores réels
+  if(data.length>0){
+    const scores=data.map(c=>c.score_potentiel||0).sort((a,b)=>b-a);
+    scoreMax=scores[0];
+    const threshold=scoreMax*0.7;
+    const zones=data.filter(c=>(c.score_potentiel||0)>=threshold).length;
+    document.getElementById('kpi-zones').textContent=zones.toLocaleString('fr-FR');
+    document.getElementById('kpi-zones-sub').textContent=`score ≥ ${threshold.toFixed(1)} (top 30%)`;
+  }
+}
+
+// ================================================================
+// CARTE — centrée France
+// ================================================================
+async function initGeoJSON(){const res=await fetch('/api/geojson');geojsonFull=await res.json()}
+
+function initMap(){
+  if(!document.getElementById('map'))return;
+  mapInstance=L.map('map',{
+    center:[46.8, 2.3],  // Centre géographique France métropolitaine
+    zoom:6,              // Zoom 6 = France entière visible
+    zoomControl:true,attributionControl:false,
+    minZoom:5,maxZoom:15
+  });
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{maxZoom:18}).addTo(mapInstance);
+  renderMapLayer(geojsonFull);
+  addLegend();
+}
+
+function getColor(s,max){
+  const m=max||scoreMax||60;
+  if(s>=m*0.7)return'#c8f542';
+  if(s>=m*0.4)return'#f59e0b';
+  return'#ef4444';
+}
+
+function renderMapLayer(data){
+  if(!mapInstance||!data)return;
+  if(mapLayer)mapInstance.removeLayer(mapLayer);
+  const max=scoreMax||60;
+  mapLayer=L.geoJSON(data,{
+    style:ft=>({fillColor:getColor(ft.properties.score_potentiel||0,max),fillOpacity:0.6,color:'rgba(255,255,255,0.05)',weight:0.5}),
+    onEachFeature:(ft,layer)=>{
+      const p=ft.properties;
+      const s=(p.score_potentiel||0).toFixed(1);
+      const b=getColor(p.score_potentiel||0,max)==='#c8f542'?'🟢':getColor(p.score_potentiel||0,max)==='#f59e0b'?'🟡':'🔴';
+      layer.bindTooltip(
+        `<div><strong style="font-size:13px">${p.nom_commune||'—'}</strong><br>
+        <span style="color:#64748b;font-family:'JetBrains Mono';font-size:10px">${p.departement||''} · ${p.region||''}</span>
+        <hr style="border:none;border-top:1px solid rgba(255,255,255,0.08);margin:8px 0">
+        ${b} Score : <strong style="color:#c8f542">${s}</strong> / 100<br>
+        Copropriétés : <strong>${(p.nb_coproprietes||0).toLocaleString('fr-FR')}</strong><br>
+        Syndic : <strong>${p.syndic_dominant||'—'}</strong><br>
+        HLM : <strong>${p.part_hlm?(p.part_hlm*100).toFixed(1)+'%':'—'}</strong>
+        <br><span style="font-family:'JetBrains Mono';font-size:9px;color:#475569">← cliquer pour le détail</span></div>`,
+        {className:'map-tooltip',sticky:true}
+      );
+      layer.on('mouseover',function(){this.setStyle({fillOpacity:0.9,weight:1.5,color:'rgba(200,245,66,0.5)'})});
+      layer.on('mouseout',function(){mapLayer.resetStyle(this)});
+      layer.on('click',function(){
+        const full=communesCache.find(c=>String(c.code_commune)===String(p.code_commune));
+        openDetail(full||p);
+      });
+    }
+  }).addTo(mapInstance);
+}
+
+function addLegend(){
+  const lg=L.control({position:'bottomright'});
+  lg.onAdd=()=>{
+    const d=L.DomUtil.create('div');
+    d.innerHTML=`<div style="background:#0d1220;border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:12px 14px;font-family:'Syne',sans-serif;font-size:11px;color:#94a3b8">
+      <div style="font-family:'JetBrains Mono';font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#e2e8f0;margin-bottom:8px">Score potentiel</div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px"><span style="width:12px;height:12px;border-radius:2px;background:#c8f542;display:inline-block"></span> Élevé (top 30%)</div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px"><span style="width:12px;height:12px;border-radius:2px;background:#f59e0b;display:inline-block"></span> Moyen (30–60%)</div>
+      <div style="display:flex;align-items:center;gap:8px"><span style="width:12px;height:12px;border-radius:2px;background:#ef4444;display:inline-block"></span> Faible (60% bas)</div>
+    </div>`;
+    return d;
+  };
+  lg.addTo(mapInstance);
+}
+
+// ================================================================
+// TOP 20
+// ================================================================
+async function initTop20(){const data=await(await fetch('/api/top20')).json();renderTop20(data)}
+
+function renderTop20(data){
+  const tbody=document.getElementById('tbody-top20');
+  if(!tbody)return;
+  const max=scoreMax||60;
+  tbody.innerHTML=data.map(c=>{
+    const s=+c.score_potentiel;
+    const cls=s>=max*0.7?'badge-high':s>=max*0.4?'badge-mid':'badge-low';
+    return`<tr onclick="openDetailFromTable('${c.code_commune}')">
+      <td class="rank-num">#${c.rang}</td>
+      <td style="font-weight:700;color:#e2e8f0">${c.nom_commune}</td>
+      <td style="font-size:11px;color:#64748b">${c.region}</td>
+      <td><span class="badge ${cls}">${s.toFixed(1)}</span></td>
+      <td style="font-family:'JetBrains Mono';font-size:11px">${(c.nb_coproprietes||0).toLocaleString('fr-FR')}</td>
+      <td style="font-family:'JetBrains Mono';font-size:11px;color:#94a3b8">${c.part_hlm_pct!=null?c.part_hlm_pct+'%':'—'}</td>
+      <td><span class="chip">${c.syndic_dominant||'—'}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+async function openDetailFromTable(code){
+  let found=communesCache.find(c=>String(c.code_commune)===String(code));
+  if(!found){const res=await fetch(`/api/communes`);const data=await res.json();found=data.find(c=>String(c.code_commune)===String(code))}
+  if(found)openDetail(found);
+}
+
+// ================================================================
+// GRAPHIQUES
+// ================================================================
+async function initStats(){
+  const data=await(await fetch('/api/stats')).json();
+  const top=data.slice(0,12);
+  const labels=top.map(r=>r.region.length>18?r.region.slice(0,18)+'…':r.region);
+  const values=top.map(r=>r.score_moyen);
+  const maxVal=Math.max(...values);
+  if(charts.regions)charts.regions.destroy();
+  charts.regions=new Chart(document.getElementById('chart-regions'),{type:'bar',data:{labels,datasets:[{data:values,backgroundColor:values.map(v=>v>=maxVal*0.7?'rgba(200,245,66,0.7)':v>=maxVal*0.4?'rgba(245,158,11,0.7)':'rgba(239,68,68,0.7)'),borderRadius:4,borderSkipped:false}]},options:{...CD,indexAxis:'y',scales:{x:{...CD.scales.x},y:{...CD.scales.y,ticks:{...CD.scales.y.ticks,font:{family:'JetBrains Mono',size:9}}}}}});
+}
+
+async function initDistrib(){
+  const data=await(await fetch('/api/graphiques/distribution')).json();
+  if(charts.distrib)charts.distrib.destroy();
+  charts.distrib=new Chart(document.getElementById('chart-distrib'),{type:'bar',data:{labels:data.map(d=>`${d.tranche_min}–${d.tranche_max}`),datasets:[{label:'Communes',data:data.map(d=>d.nb_communes),backgroundColor:data.map(d=>d.tranche_min>=40?'rgba(200,245,66,0.7)':d.tranche_min>=25?'rgba(245,158,11,0.7)':'rgba(239,68,68,0.5)'),borderRadius:4,borderSkipped:false}]},options:{...CD}});
+}
+
+async function initSyndic(){
+  const [data, modeRes] = await Promise.all([
+    fetch('/api/graphiques/syndic').then(r=>r.json()),
+    fetch('/api/kpi3/mode').then(r=>r.json())
+  ]);
+  const mode = modeRes.mode;
+
+  // Adapter le titre et le badge selon le mode
+  const panelTitle = document.querySelector('#section-charts .panel:nth-child(2) .panel-title');
+  const panelBadge = document.querySelector('#section-charts .panel:nth-child(2) .panel-badge');
+  if(mode === 'departement' || mode === 'mock') {
+    if(panelTitle) panelTitle.textContent = 'Concentration syndic / département';
+    if(panelBadge) panelBadge.textContent = 'KPI 3 · % copros sous même syndic';
+  } else {
+    if(panelTitle) panelTitle.textContent = 'Top 15 zones par score';
+    if(panelBadge) panelBadge.textContent = 'KPI 3 · En attente données Data';
+  }
+
+  if(charts.syndic)charts.syndic.destroy();
+
+  // Mode département — afficher concentration_pct
+  if(mode === 'departement' || mode === 'mock') {
+    charts.syndic=new Chart(document.getElementById('chart-syndic'),{
+      type:'bar',
+      data:{
+        labels:data.map(d=>d.nom_commune.length>16?d.nom_commune.slice(0,16)+'…':d.nom_commune),
+        datasets:[{
+          label:'Concentration syndic (%)',
+          data:data.map(d=>d.concentration_pct),
+          backgroundColor:data.map(d=>
+            d.concentration_pct>=40?'rgba(200,245,66,0.7)':
+            d.concentration_pct>=25?'rgba(245,158,11,0.7)':'rgba(239,68,68,0.5)'
+          ),
+          borderRadius:4,borderSkipped:false
+        }]
+      },
+      options:{
+        ...CD,
+        scales:{...CD.scales,y:{...CD.scales.y,min:0,max:100}},
+        plugins:{
+          ...CD.plugins,
+          tooltip:{
+            ...CD.plugins.tooltip,
+            callbacks:{
+              label:ctx=>{
+                const d=data[ctx.dataIndex];
+                return[
+                  ' Concentration : '+ctx.raw+'%',
+                  ' Syndic dominant : '+d.syndic_dominant,
+                  ' Copros totales : '+(d.nb_coproprietes||'—'),
+                  ' Sous ce syndic : '+(d.nb_copros_syndic||'—')
+                ];
+              }
+            }
+          }
+        }
+      }
+    });
+  } else {
+    // Fallback — afficher score potentiel
+    const max=Math.max(...data.map(d=>d.score_potentiel||0));
+    charts.syndic=new Chart(document.getElementById('chart-syndic'),{
+      type:'bar',
+      data:{
+        labels:data.map(d=>d.nom_commune.length>14?d.nom_commune.slice(0,14)+'…':d.nom_commune),
+        datasets:[{
+          label:'Score potentiel',
+          data:data.map(d=>d.score_potentiel),
+          backgroundColor:data.map(d=>
+            d.score_potentiel>=max*0.7?'rgba(200,245,66,0.7)':
+            d.score_potentiel>=max*0.4?'rgba(245,158,11,0.7)':'rgba(239,68,68,0.5)'
+          ),
+          borderRadius:4,borderSkipped:false
+        }]
+      },
+      options:{
+        ...CD,
+        plugins:{
+          ...CD.plugins,
+          tooltip:{
+            ...CD.plugins.tooltip,
+            callbacks:{
+              label:ctx=>{
+                const d=data[ctx.dataIndex];
+                return[
+                  ' Score : '+ctx.raw,
+                  ' Syndic : '+d.syndic_dominant,
+                  ' Copros : '+d.nb_coproprietes
+                ];
+              }
+            }
+          }
+        }
+      }
+    });
+  }
+}
+
+async function initScatter(){
+  const data=await(await fetch('/api/graphiques/scatter')).json();
+  const max=scoreMax||60;
+  if(charts.scatter)charts.scatter.destroy();
+  charts.scatter=new Chart(document.getElementById('chart-scatter'),{type:'scatter',data:{datasets:[
+    {label:'Score élevé',data:data.filter(d=>d.score_potentiel>=max*0.7).map(d=>({x:d.part_hlm_pct,y:d.score_potentiel,label:d.nom_commune})),backgroundColor:'rgba(200,245,66,0.5)',borderColor:'rgba(200,245,66,0.8)',pointRadius:4,pointHoverRadius:6},
+    {label:'Score moyen',data:data.filter(d=>d.score_potentiel>=max*0.4&&d.score_potentiel<max*0.7).map(d=>({x:d.part_hlm_pct,y:d.score_potentiel,label:d.nom_commune})),backgroundColor:'rgba(245,158,11,0.5)',borderColor:'rgba(245,158,11,0.8)',pointRadius:3,pointHoverRadius:5},
+    {label:'Score faible',data:data.filter(d=>d.score_potentiel<max*0.4).map(d=>({x:d.part_hlm_pct,y:d.score_potentiel,label:d.nom_commune})),backgroundColor:'rgba(239,68,68,0.4)',borderColor:'rgba(239,68,68,0.7)',pointRadius:3,pointHoverRadius:5}
+  ]},options:{...CD,plugins:{...CD.plugins,legend:{display:true,labels:{color:'#94a3b8',font:{family:'JetBrains Mono',size:10},boxWidth:10,padding:16}},tooltip:{...CD.plugins.tooltip,callbacks:{label:ctx=>{const d=ctx.raw;return` ${d.label||'—'} — HLM: ${d.x}% · Score: ${d.y}`}}}},scales:{x:{...CD.scales.x,title:{display:true,text:'Part logements HLM (%)',color:'#475569',font:{family:'JetBrains Mono',size:10}}},y:{...CD.scales.y,title:{display:true,text:'Score potentiel',color:'#475569',font:{family:'JetBrains Mono',size:10}}}}}});
+}
+
+// ================================================================
+// NAV
+// ================================================================
+function setActive(el){document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));el.classList.add('active')}
+
+
+// ================================================================
+// MATRICE OPPORTUNITÉ / VITESSE
+// ================================================================
+async function initMatrix() {
+  try {
+    const res  = await fetch('/api/graphiques/scatter');
+    const data = await res.json();
+    const max  = scoreMax || 60;
+
+    if(charts.matrix) charts.matrix.destroy();
+
+    // Quadrants — lignes de séparation
+    const midX = max * 0.5;
+    const midY = 30;
+
+    charts.matrix = new Chart(document.getElementById('chart-matrix'), {
+      type: 'scatter',
+      data: {
+        datasets: [
+          {
+            label: 'Zone idéale (score élevé + HLM élevé)',
+            data: data.filter(d => d.score_potentiel >= midX && d.part_hlm_pct >= midY)
+              .map(d => ({x: d.score_potentiel, y: d.part_hlm_pct, label: d.nom_commune})),
+            backgroundColor: 'rgba(200,245,66,0.7)',
+            borderColor: 'rgba(200,245,66,1)',
+            pointRadius: 5, pointHoverRadius: 8
+          },
+          {
+            label: 'Rentable, déploiement lent (score élevé + HLM faible)',
+            data: data.filter(d => d.score_potentiel >= midX && d.part_hlm_pct < midY)
+              .map(d => ({x: d.score_potentiel, y: d.part_hlm_pct, label: d.nom_commune})),
+            backgroundColor: 'rgba(0,212,255,0.5)',
+            borderColor: 'rgba(0,212,255,0.8)',
+            pointRadius: 4, pointHoverRadius: 7
+          },
+          {
+            label: 'Déploiement rapide, moins rentable (score faible + HLM élevé)',
+            data: data.filter(d => d.score_potentiel < midX && d.part_hlm_pct >= midY)
+              .map(d => ({x: d.score_potentiel, y: d.part_hlm_pct, label: d.nom_commune})),
+            backgroundColor: 'rgba(245,158,11,0.5)',
+            borderColor: 'rgba(245,158,11,0.8)',
+            pointRadius: 4, pointHoverRadius: 7
+          },
+          {
+            label: 'Peu prioritaire (score faible + HLM faible)',
+            data: data.filter(d => d.score_potentiel < midX && d.part_hlm_pct < midY)
+              .map(d => ({x: d.score_potentiel, y: d.part_hlm_pct, label: d.nom_commune})),
+            backgroundColor: 'rgba(100,100,100,0.25)',
+            borderColor: 'rgba(100,100,100,0.4)',
+            pointRadius: 3, pointHoverRadius: 5
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: true,
+            position: 'bottom',
+            labels: {color:'#94a3b8', font:{family:'JetBrains Mono',size:10}, boxWidth:10, padding:16}
+          },
+          tooltip: {
+            backgroundColor:'#0d1220',borderColor:'rgba(255,255,255,0.1)',borderWidth:1,
+            titleColor:'#e2e8f0',bodyColor:'#94a3b8',padding:10,cornerRadius:6,
+            titleFont:{family:'Syne',size:12,weight:'700'},
+            bodyFont:{family:'JetBrains Mono',size:11},
+            callbacks: {
+              title: ctx => ctx[0].raw.label || '—',
+              label: ctx => [
+                ' Opportunité (score) : ' + ctx.raw.x,
+                ' Vitesse déploiement (HLM) : ' + ctx.raw.y + '%'
+              ]
+            }
+          },
+          // Lignes de séparation des quadrants
+          annotation: undefined
+        },
+        scales: {
+          x: {
+            grid: {color:'rgba(255,255,255,0.04)'},
+            ticks: {color:'#475569',font:{family:'JetBrains Mono',size:10}},
+            title: {
+              display: true,
+              text: '← Opportunité commerciale (Score potentiel) →',
+              color: '#c8f542',
+              font: {family:'JetBrains Mono', size:11, weight:'700'}
+            }
+          },
+          y: {
+            grid: {color:'rgba(255,255,255,0.04)'},
+            ticks: {color:'#475569',font:{family:'JetBrains Mono',size:10}},
+            title: {
+              display: true,
+              text: '← Vitesse de déploiement (Part HLM %) →',
+              color: '#c8f542',
+              font: {family:'JetBrains Mono', size:11, weight:'700'}
+            }
+          }
+        }
+      }
+    });
+
+    // Dessiner les lignes de quadrant manuellement après render
+    charts.matrix.options.animation = {
+      onComplete: () => drawQuadrantLines(charts.matrix, midX, midY)
+    };
+    charts.matrix.update();
+
+  } catch(e) { console.warn('Matrix error:', e); }
+}
+
+function drawQuadrantLines(chart, midX, midY) {
+  const ctx  = chart.ctx;
+  const xAxis = chart.scales.x;
+  const yAxis = chart.scales.y;
+  const xPx  = xAxis.getPixelForValue(midX);
+  const yPx  = yAxis.getPixelForValue(midY);
+
+  ctx.save();
+  ctx.setLineDash([6, 4]);
+  ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+  ctx.lineWidth   = 1;
+
+  // Ligne verticale
+  ctx.beginPath();
+  ctx.moveTo(xPx, yAxis.top);
+  ctx.lineTo(xPx, yAxis.bottom);
+  ctx.stroke();
+
+  // Ligne horizontale
+  ctx.beginPath();
+  ctx.moveTo(xAxis.left, yPx);
+  ctx.lineTo(xAxis.right, yPx);
+  ctx.stroke();
+
+  ctx.restore();
+}
+
+
+// ================================================================
+// INIT
+// ================================================================
+async function init(){
+  await Promise.all([initFiltres(),initGeoJSON()]);
+  const communes=await fetchCommunes();
+  communesCache=communes;
+  updateKPIs(communes);
+  initMap();
+  await Promise.all([initTop20(),initStats(),initDistrib(),initSyndic(),initScatter(),initMatrix()]);
+  setTimeout(()=>{
+    document.getElementById('loading').style.display='none';
+    document.querySelectorAll('.fade').forEach((el,i)=>setTimeout(()=>el.classList.add('in'),i*60));
+  },1600);
+}
+
+window.addEventListener('load',init);
+</script>
+</body>
+</html>

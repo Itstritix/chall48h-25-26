@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Parkshare — Étude de marché 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,400;0,700;0,900;1,300;1,700&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#06080f;--bg2:#0b0f1a;
+  --ink:#f0ece4;--ink2:#9a9490;--ink3:#4a4640;
+  --accent:#c8f542;--accent2:#00d4ff;--accent3:#ff6b35;
+  --border:rgba(240,236,228,0.08);--border2:rgba(240,236,228,0.15);
+  --font:'Fraunces',serif;--mono:'DM Mono',monospace;
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--ink);font-family:var(--font);overflow-x:hidden}
+::-webkit-scrollbar{width:3px}
+::-webkit-scrollbar-thumb{background:var(--accent);border-radius:2px}
+
+/* ── NAV ── */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:20px 60px;display:flex;align-items:center;justify-content:space-between;transition:all .4s}
+nav.scrolled{background:rgba(6,8,15,0.95);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);padding:14px 60px}
+.nav-logo{font-size:18px;font-weight:900;color:var(--ink);letter-spacing:-0.5px}
+.nav-logo span{color:var(--accent)}
+.nav-links{display:flex;align-items:center;gap:32px}
+.nav-link{font-family:var(--mono);font-size:11px;color:var(--ink2);text-decoration:none;letter-spacing:2px;text-transform:uppercase;transition:color .2s}
+.nav-link:hover{color:var(--ink)}
+.nav-cta{font-family:var(--mono);font-size:11px;letter-spacing:2px;text-transform:uppercase;padding:10px 20px;border:1px solid var(--accent);color:var(--accent);text-decoration:none;border-radius:4px;transition:all .2s}
+.nav-cta:hover{background:var(--accent);color:var(--bg)}
+
+/* ── HERO ── */
+.hero{min-height:100vh;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;padding:120px 60px 80px;position:relative;overflow:hidden}
+.hero-grid{position:absolute;inset:0;opacity:.12;background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);background-size:80px 80px;pointer-events:none}
+.hero-glow{position:absolute;top:-200px;right:-200px;width:700px;height:700px;border-radius:50%;background:radial-gradient(circle,rgba(200,245,66,0.05) 0%,transparent 70%);pointer-events:none}
+
+/* TEXTE HERO — toujours visible, animation CSS simple */
+.hero-tag{font-family:var(--mono);font-size:11px;color:var(--accent);letter-spacing:4px;text-transform:uppercase;display:flex;align-items:center;gap:12px;margin-bottom:32px}
+.hero-tag::before{content:'';width:40px;height:1px;background:var(--accent)}
+.hero h1{font-size:clamp(52px,7vw,96px);font-weight:900;line-height:.95;letter-spacing:-3px;color:var(--ink);max-width:900px;margin-bottom:32px}
+.hero h1 em{font-style:italic;color:var(--accent);font-weight:300}
+.hero-desc{font-size:18px;font-weight:300;color:var(--ink2);line-height:1.7;max-width:560px;margin-bottom:56px}
+.hero-desc strong{color:var(--ink)}
+.hero-actions{display:flex;align-items:center;gap:24px}
+
+.btn-primary{padding:16px 36px;background:var(--accent);color:var(--bg);font-family:var(--mono);font-size:12px;font-weight:500;letter-spacing:2px;text-transform:uppercase;text-decoration:none;border-radius:4px;transition:all .3s;display:inline-block}
+.btn-primary:hover{background:#d4f55a;transform:translateY(-2px);box-shadow:0 12px 40px rgba(200,245,66,0.25)}
+.btn-secondary{font-family:var(--mono);font-size:11px;color:var(--ink2);text-decoration:none;letter-spacing:2px;text-transform:uppercase;display:flex;align-items:center;gap:8px;transition:color .2s}
+.btn-secondary:hover{color:var(--ink)}
+
+.hero-scroll{position:absolute;bottom:40px;left:60px;font-family:var(--mono);font-size:10px;color:var(--ink3);letter-spacing:3px;text-transform:uppercase;display:flex;align-items:center;gap:16px}
+.hero-scroll::before{content:'';width:60px;height:1px;background:var(--ink3)}
+
+/* ── SECTIONS ── */
+section{padding:100px 60px}
+
+/* ── CONTEXTE ── */
+.context-grid{display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:start}
+.context-label{font-family:var(--mono);font-size:10px;color:var(--accent);letter-spacing:4px;text-transform:uppercase;margin-bottom:20px;display:flex;align-items:center;gap:12px}
+.context-label::before{content:'';width:24px;height:1px;background:var(--accent)}
+.context h2{font-size:clamp(36px,4vw,52px);font-weight:900;line-height:1;letter-spacing:-2px;margin-bottom:24px;color:var(--ink)}
+.context h2 em{font-style:italic;font-weight:300;color:var(--ink2)}
+.context p{font-size:16px;font-weight:300;color:var(--ink2);line-height:1.8;margin-bottom:16px}
+.context-quote{border-left:2px solid var(--accent);padding:24px 28px;background:rgba(200,245,66,0.04);border-radius:0 8px 8px 0;margin-top:32px}
+.context-quote p{font-size:15px;font-style:italic;color:var(--ink);margin:0;line-height:1.7}
+.context-quote cite{font-family:var(--mono);font-size:10px;color:var(--ink3);letter-spacing:2px;text-transform:uppercase;display:block;margin-top:12px}
+.context-cards{display:flex;flex-direction:column;gap:16px}
+.context-card{border:1px solid var(--border);border-radius:8px;padding:24px;background:rgba(255,255,255,0.02);transition:all .3s;cursor:default}
+.context-card:hover{border-color:var(--border2);background:rgba(255,255,255,0.04);transform:translateX(4px)}
+.context-card-icon{font-size:24px;margin-bottom:12px}
+.context-card-title{font-size:14px;font-weight:700;color:var(--ink);margin-bottom:6px}
+.context-card-text{font-size:13px;font-weight:300;color:var(--ink2);line-height:1.6}
+
+/* ── CHIFFRES ── */
+.chiffres{background:var(--bg2);border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+.chiffres-header{text-align:center;margin-bottom:64px}
+.chiffres-header h2{font-size:clamp(32px,4vw,48px);font-weight:900;letter-spacing:-2px;color:var(--ink)}
+.chiffres-header h2 em{font-style:italic;font-weight:300;color:var(--ink2)}
+.chiffres-header p{font-size:15px;color:var(--ink2);margin-top:12px;font-weight:300}
+.chiffres-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);border-radius:12px;overflow:hidden}
+.chiffre-item{background:var(--bg2);padding:40px 32px;text-align:center;transition:background .3s}
+.chiffre-item:hover{background:rgba(255,255,255,0.03)}
+.chiffre-num{font-size:clamp(40px,4vw,56px);font-weight:900;letter-spacing:-2px;line-height:1;margin-bottom:8px}
+.chiffre-num.lime{color:var(--accent)}
+.chiffre-num.cyan{color:var(--accent2)}
+.chiffre-num.orange{color:var(--accent3)}
+.chiffre-num.white{color:var(--ink)}
+.chiffre-label{font-family:var(--mono);font-size:10px;color:var(--ink3);letter-spacing:3px;text-transform:uppercase;margin-bottom:6px}
+.chiffre-sub{font-size:12px;color:var(--ink3);font-weight:300}
+
+/* ── INSIGHTS ── */
+.insights-header{margin-bottom:64px}
+.insights-header h2{font-size:clamp(36px,4vw,56px);font-weight:900;letter-spacing:-2px;line-height:1;color:var(--ink)}
+.insights-header h2 em{font-style:italic;font-weight:300;color:var(--ink2)}
+.insights-header p{font-size:15px;color:var(--ink2);margin-top:16px;font-weight:300;max-width:600px}
+.insights-list{display:flex;flex-direction:column;gap:2px}
+.insight-item{display:grid;grid-template-columns:80px 1fr auto;align-items:start;gap:40px;padding:36px 0;border-bottom:1px solid var(--border);transition:all .3s;cursor:default}
+.insight-item:hover .insight-num{color:var(--accent)}
+.insight-item:hover .insight-arrow{opacity:1;transform:translateX(0)}
+.insight-num{font-size:clamp(48px,5vw,64px);font-weight:900;letter-spacing:-3px;color:var(--ink3);line-height:1;transition:color .3s;font-style:italic}
+.insight-tag{font-family:var(--mono);font-size:10px;color:var(--accent);letter-spacing:3px;text-transform:uppercase;margin-bottom:10px}
+.insight-title{font-size:clamp(18px,2vw,24px);font-weight:700;color:var(--ink);margin-bottom:10px;letter-spacing:-0.5px}
+.insight-text{font-size:14px;font-weight:300;color:var(--ink2);line-height:1.7;max-width:600px}
+.insight-arrow{font-size:24px;color:var(--accent);opacity:0;transform:translateX(-8px);transition:all .3s;align-self:center}
+
+/* ── TOP 3 ── */
+.top3-header{text-align:center;margin-bottom:64px}
+.top3-header h2{font-size:clamp(32px,4vw,48px);font-weight:900;letter-spacing:-2px;color:var(--ink)}
+.top3-header h2 em{font-style:italic;font-weight:300;color:var(--ink2)}
+.top3-header p{font-size:15px;color:var(--ink2);margin-top:12px;font-weight:300}
+.top3-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px}
+.top3-card{border:1px solid var(--border);border-radius:12px;padding:36px 28px;position:relative;overflow:hidden;transition:all .4s;cursor:default}
+.top3-card:hover{transform:translateY(-6px);border-color:var(--border2)}
+.top3-card.gold{border-color:rgba(200,245,66,0.3);background:rgba(200,245,66,0.04)}
+.top3-card.gold:hover{box-shadow:0 20px 60px rgba(200,245,66,0.1)}
+.top3-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--border);transition:background .3s}
+.top3-card.gold::before{background:linear-gradient(90deg,var(--accent),transparent)}
+.top3-rank{font-family:var(--mono);font-size:11px;color:var(--ink3);letter-spacing:3px;text-transform:uppercase;margin-bottom:20px;display:flex;align-items:center;gap:8px}
+.top3-rank-num{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700}
+.gold .top3-rank-num{background:var(--accent);color:var(--bg)}
+.top3-rank-num.silver{background:rgba(255,255,255,0.1);color:var(--ink2)}
+.top3-rank-num.bronze{background:rgba(255,107,53,0.2);color:var(--accent3)}
+.top3-commune{font-size:clamp(22px,2.5vw,30px);font-weight:900;color:var(--ink);letter-spacing:-1px;margin-bottom:4px}
+.top3-region{font-family:var(--mono);font-size:11px;color:var(--ink3);letter-spacing:2px;text-transform:uppercase;margin-bottom:24px}
+.top3-score-label{font-family:var(--mono);font-size:10px;color:var(--ink3);letter-spacing:2px;text-transform:uppercase;margin-bottom:6px}
+.top3-score{font-size:48px;font-weight:900;letter-spacing:-2px;line-height:1;margin-bottom:4px}
+.gold .top3-score{color:var(--accent)}
+.top3-score.silver{color:var(--ink2)}
+.top3-score.bronze{color:var(--accent3)}
+.top3-score-max{font-family:var(--mono);font-size:11px;color:var(--ink3)}
+.top3-stats{margin-top:24px;padding-top:20px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:8px}
+.top3-stat{display:flex;justify-content:space-between;align-items:center}
+.top3-stat-label{font-family:var(--mono);font-size:10px;color:var(--ink3);letter-spacing:1px}
+.top3-stat-val{font-family:var(--mono);font-size:11px;color:var(--ink);font-weight:500}
+
+/* ── CTA ── */
+.cta{text-align:center;padding:120px 60px;background:linear-gradient(180deg,var(--bg) 0%,rgba(200,245,66,0.04) 50%,var(--bg) 100%)}
+.cta h2{font-size:clamp(40px,6vw,72px);font-weight:900;letter-spacing:-3px;line-height:.95;margin-bottom:24px;color:var(--ink)}
+.cta h2 em{font-style:italic;font-weight:300;color:var(--accent)}
+.cta p{font-size:16px;color:var(--ink2);font-weight:300;max-width:500px;margin:0 auto 48px;line-height:1.7}
+.cta-actions{display:flex;align-items:center;justify-content:center;gap:24px}
+
+/* ── FOOTER ── */
+footer{padding:32px 60px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.footer-logo{font-size:14px;font-weight:900;color:var(--ink2)}
+.footer-logo span{color:var(--accent)}
+.footer-text{font-family:var(--mono);font-size:10px;color:var(--ink3);letter-spacing:2px;text-transform:uppercase}
+
+/* ── SCROLL REVEAL ── */
+.reveal{opacity:0;transform:translateY(28px);transition:opacity .7s cubic-bezier(.16,1,.3,1),transform .7s cubic-bezier(.16,1,.3,1)}
+.reveal.visible{opacity:1;transform:none}
+.reveal.d1{transition-delay:.1s}
+.reveal.d2{transition-delay:.2s}
+.reveal.d3{transition-delay:.3s}
+
+@media(max-width:900px){
+  nav,section,.hero,.cta,footer{padding-left:24px;padding-right:24px}
+  .context-grid,.top3-grid{grid-template-columns:1fr}
+  .chiffres-grid{grid-template-columns:repeat(2,1fr)}
+  .insight-item{grid-template-columns:48px 1fr;gap:20px}
+  .insight-arrow{display:none}
+}
+</style>
+</head>
+<body>
+
+<nav id="nav">
+  <div class="nav-logo">Park<span>share</span></div>
+  <div class="nav-links">
+    <a href="#contexte" class="nav-link">Contexte</a>
+    <a href="#concurrence" class="nav-link">Concurrents</a>
+    <a href="#chiffres" class="nav-link">Chiffres</a>
+    <a href="#score" class="nav-link">Score</a>
+    <a href="#insights" class="nav-link">Insights</a>
+    <a href="#top3" class="nav-link">Top zones</a>
+    <a href="/dashboard" class="nav-cta">Dashboard →</a>
+  </div>
+</nav>
+
+<!-- HERO — texte toujours visible dès le chargement -->
+<section class="hero">
+  <div class="hero-grid"></div>
+  <div class="hero-glow"></div>
+  <div class="hero-tag">Étude de marché · France · 2026</div>
+  <h1>Où prospecter<br><em>en premier</em> ?</h1>
+  <p class="hero-desc">
+    Analyse de <strong id="hero-communes">35 000+</strong> communes françaises pour identifier
+    les zones à fort potentiel commercial pour Parkshare — syndics, bailleurs sociaux,
+    copropriétés à haute valeur.
+  </p>
+  <div class="hero-actions">
+    <a href="/dashboard" class="btn-primary">Explorer le dashboard</a>
+    <a href="#contexte" class="btn-secondary">Lire l'analyse ↓</a>
+  </div>
+  <div class="hero-scroll">Défiler pour lire</div>
+</section>
+
+<!-- CONTEXTE -->
+<section id="contexte">
+  <div class="context-grid">
+    <div>
+      <div class="context-label reveal">Problématique</div>
+      <h2 class="reveal d1">Le marché du<br>parking en<br><em>copropriété</em></h2>
+      <p class="reveal d2">
+        Parkshare connecte les résidents d'une même copropriété pour partager leurs places
+        de stationnement. Le vrai client n'est pas le résident — c'est le syndic ou le bailleur
+        qui déploie la plateforme.
+      </p>
+      <p class="reveal d2">
+        L'enjeu commercial : identifier quelles zones géographiques concentrent le plus
+        de copropriétés à fort potentiel, gérées par des syndics professionnels ou
+        des bailleurs sociaux avec lesquels un seul contrat peut valoir des dizaines de déploiements.
+      </p>
+      <div class="context-quote reveal d3">
+        <p>Sur 800 000 places de parking à Paris intra-muros, environ 500 000 sont privées.
+        Les grands acteurs comme Zenpark ne couvrent pas ce segment. C'est le marché de Parkshare.</p>
+        <cite>— Document stratégique Parkshare 2026</cite>
+      </div>
+    </div>
+    <div class="context-cards">
+      <div class="context-card reveal">
+        <div class="context-card-icon">🏢</div>
+        <div class="context-card-title">Le modèle syndic</div>
+        <div class="context-card-text">Un accord-cadre avec Foncia ou Nexity peut déclencher des centaines de déploiements simultanés. La concentration syndic est un multiplicateur commercial clé.</div>
+      </div>
+      <div class="context-card reveal d1">
+        <div class="context-card-icon">🏗️</div>
+        <div class="context-card-title">L'avantage OPH/ESH</div>
+        <div class="context-card-text">Les bailleurs sociaux sont propriétaires à 100% de leurs bâtiments. Pas de vote en assemblée générale — un seul décideur peut valider pour toutes les résidences.</div>
+      </div>
+      <div class="context-card reveal d2">
+        <div class="context-card-icon">🎯</div>
+        <div class="context-card-title">Les zones cibles</div>
+        <div class="context-card-text">Les métropoles intermédiaires — Lyon, Bordeaux, Nantes, Toulouse — offrent une densité suffisante avec moins de pression concurrentielle que Paris.</div>
+      </div>
+      <div class="context-card reveal d3">
+        <div class="context-card-icon">📊</div>
+        <div class="context-card-title">La méthode de scoring</div>
+        <div class="context-card-text">5 variables pondérées : taille des copros (25%), motorisation (20%), logements collectifs (20%), concentration syndic (20%), part OPH/ESH (15%).</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CHIFFRES CLÉS -->
+<section id="chiffres" class="chiffres">
+  <div class="chiffres-header reveal">
+    <h2>Les chiffres <em>clés</em></h2>
+    <p>Données calculées sur l'ensemble du territoire français analysé</p>
+  </div>
+  <div class="chiffres-grid">
+    <div class="chiffre-item reveal">
+      <div class="chiffre-label">Communes analysées</div>
+      <div class="chiffre-num lime" id="stat-communes">—</div>
+      <div class="chiffre-sub">sur le territoire français</div>
+    </div>
+    <div class="chiffre-item reveal d1">
+      <div class="chiffre-label">Copropriétés identifiées</div>
+      <div class="chiffre-num cyan" id="stat-copros">—</div>
+      <div class="chiffre-sub">lots de stationnement inclus</div>
+    </div>
+    <div class="chiffre-item reveal d2">
+      <div class="chiffre-label">Zones prioritaires</div>
+      <div class="chiffre-num orange" id="stat-zones">—</div>
+      <div class="chiffre-sub">score ≥ 66 / 100</div>
+    </div>
+    <div class="chiffre-item reveal d3">
+      <div class="chiffre-label">Score moyen national</div>
+      <div class="chiffre-num white" id="stat-score">—</div>
+      <div class="chiffre-sub">sur 100 points</div>
+    </div>
+  </div>
+
+<!-- ANALYSE CONCURRENTIELLE -->
+<section id="concurrence" style="padding:100px 60px;background:var(--bg)">
+
+  <!-- En-tête -->
+  <div class="reveal" style="margin-bottom:72px">
+    <div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--accent);letter-spacing:4px;text-transform:uppercase;margin-bottom:20px;display:flex;align-items:center;gap:14px">
+      <span style="width:32px;height:1px;background:var(--accent);display:inline-block"></span>
+      Analyse concurrentielle
+    </div>
+    <h2 style="font-size:clamp(40px,5vw,64px);font-weight:900;letter-spacing:-3px;line-height:.95;color:var(--ink);margin-bottom:24px">
+      Pourquoi Parkshare<br><em style="font-style:italic;font-weight:300;color:var(--ink2)">gagne ce marché</em>
+    </h2>
+    <p style="font-size:18px;color:var(--ink2);font-weight:300;line-height:1.8;max-width:640px">
+      Le marché du stationnement en copropriété est occupé par trois types d'acteurs.
+      Aucun ne couvre le segment de Parkshare — c'est précisément là que se trouve l'opportunité.
+    </p>
+  </div>
+
+  <!-- Les 3 catégories -->
+  <div style="display:flex;flex-direction:column;gap:3px;margin-bottom:72px">
+
+    <!-- Catégorie 1 -->
+    <div class="reveal" style="display:grid;grid-template-columns:280px 1fr auto;align-items:start;gap:48px;padding:40px 0;border-bottom:1px solid rgba(255,255,255,0.06)">
+      <div>
+        <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--ink3);letter-spacing:3px;text-transform:uppercase;margin-bottom:12px">Catégorie 01</div>
+        <div style="font-size:22px;font-weight:800;color:var(--ink);letter-spacing:-0.5px;margin-bottom:8px">Marketplaces ouvertes</div>
+        <div style="font-family:'DM Mono',monospace;font-size:12px;color:var(--ink3)">LeBonCoin · ParkMatch · PrendsmaPlace</div>
+      </div>
+      <div>
+        <div style="font-size:16px;color:var(--ink2);line-height:1.8;margin-bottom:20px">
+          Ces plateformes mettent en relation des particuliers de manière anonyme et ouverte.
+          Elles n'ont aucun ancrage dans la gestion de copropriété, aucun interlocuteur syndic,
+          et exposent les utilisateurs à un risque légal dès qu'un non-résident accède à un parking privé.
+        </div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap">
+          <span style="font-family:'DM Mono',monospace;font-size:11px;color:#ef4444;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.15);padding:6px 14px;border-radius:6px">❌ Pas d'intégration syndic</span>
+          <span style="font-family:'DM Mono',monospace;font-size:11px;color:#ef4444;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.15);padding:6px 14px;border-radius:6px">❌ Risque légal non-résidents</span>
+          <span style="font-family:'DM Mono',monospace;font-size:11px;color:#ef4444;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.15);padding:6px 14px;border-radius:6px">❌ Marché ouvert anonyme</span>
+        </div>
+      </div>
+      <div style="background:rgba(200,245,66,0.06);border:1px solid rgba(200,245,66,0.15);border-radius:12px;padding:20px 24px;text-align:center;min-width:160px">
+        <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--ink3);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px">Threat level</div>
+        <div style="font-size:28px;font-weight:800;color:var(--accent)">Faible</div>
+        <div style="font-size:13px;color:var(--ink3);margin-top:4px">Concurrent indirect</div>
+      </div>
+    </div>
+
+    <!-- Catégorie 2 -->
+    <div class="reveal" style="display:grid;grid-template-columns:280px 1fr auto;align-items:start;gap:48px;padding:40px 0;border-bottom:1px solid rgba(255,255,255,0.06)">
+      <div>
+        <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--ink3);letter-spacing:3px;text-transform:uppercase;margin-bottom:12px">Catégorie 02</div>
+        <div style="font-size:22px;font-weight:800;color:var(--ink);letter-spacing:-0.5px;margin-bottom:8px">Géants du parking digital</div>
+        <div style="font-family:'DM Mono',monospace;font-size:12px;color:var(--ink3)">Yespark · Zenpark (fusionnés)</div>
+      </div>
+      <div>
+        <div style="font-size:16px;color:var(--ink2);line-height:1.8;margin-bottom:20px">
+          Leaders français avec 13 millions d'usagers par an, fortement implantés à Paris centre et La Défense.
+          <strong style="color:var(--ink)">Zenpark a délibérément exclu les copropriétés résidentielles</strong>,
+          jugées trop complexes légalement. Sur 800 000 places à Paris intra-muros,
+          environ 500 000 sont privées — les géants ne couvrent pas ce segment.
+          C'est exactement le vide que Parkshare occupe.
+        </div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap">
+          <span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--accent);background:rgba(200,245,66,0.06);border:1px solid rgba(200,245,66,0.15);padding:6px 14px;border-radius:6px">✅ Marché différent</span>
+          <span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--accent);background:rgba(200,245,66,0.06);border:1px solid rgba(200,245,66,0.15);padding:6px 14px;border-radius:6px">✅ Segment copros ignoré</span>
+          <span style="font-family:'DM Mono',monospace;font-size:11px;color:#f59e0b;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.15);padding:6px 14px;border-radius:6px">⚠️ Actifs sur Paris centre</span>
+        </div>
+      </div>
+      <div style="background:rgba(200,245,66,0.06);border:1px solid rgba(200,245,66,0.15);border-radius:12px;padding:20px 24px;text-align:center;min-width:160px">
+        <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--ink3);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px">Threat level</div>
+        <div style="font-size:28px;font-weight:800;color:#f59e0b">Moyen</div>
+        <div style="font-size:13px;color:var(--ink3);margin-top:4px">Paris uniquement</div>
+      </div>
+    </div>
+
+    <!-- Catégorie 3 -->
+    <div class="reveal" style="display:grid;grid-template-columns:280px 1fr auto;align-items:start;gap:48px;padding:40px 0">
+      <div>
+        <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--ink3);letter-spacing:3px;text-transform:uppercase;margin-bottom:12px">Catégorie 03</div>
+        <div style="font-size:22px;font-weight:800;color:var(--ink);letter-spacing:-0.5px;margin-bottom:8px">Solutions smart building</div>
+        <div style="font-family:'DM Mono',monospace;font-size:12px;color:var(--ink3)">Idealys · Autres plateformes multi-services</div>
+      </div>
+      <div>
+        <div style="font-size:16px;color:var(--ink2);line-height:1.8;margin-bottom:20px">
+          Plateformes multi-services pour les immeubles connectés — énergie, domotique, accès, stationnement.
+          Idealys propose un module parking, mais reste généraliste.
+          <strong style="color:var(--ink)">La spécialisation de Parkshare lui permet d'aller bien plus loin
+          sur le cas d'usage précis du stationnement</strong>, là où les généralistes restent superficiels.
+        </div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap">
+          <span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--accent);background:rgba(200,245,66,0.06);border:1px solid rgba(200,245,66,0.15);padding:6px 14px;border-radius:6px">✅ Parkshare plus spécialisé</span>
+          <span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--accent);background:rgba(200,245,66,0.06);border:1px solid rgba(200,245,66,0.15);padding:6px 14px;border-radius:6px">✅ Fonctionnalités plus profondes</span>
+          <span style="font-family:'DM Mono',monospace;font-size:11px;color:#ef4444;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.15);padding:6px 14px;border-radius:6px">⚠️ Concurrent le plus proche</span>
+        </div>
+      </div>
+      <div style="background:rgba(200,245,66,0.06);border:1px solid rgba(200,245,66,0.15);border-radius:12px;padding:20px 24px;text-align:center;min-width:160px">
+        <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--ink3);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px">Threat level</div>
+        <div style="font-size:28px;font-weight:800;color:#f59e0b">Moyen</div>
+        <div style="font-size:13px;color:var(--ink3);margin-top:4px">Généraliste vs spécialiste</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Argument final — le vide de marché -->
+  <div class="reveal" style="background:rgba(200,245,66,0.04);border:1px solid rgba(200,245,66,0.15);border-radius:16px;padding:48px;display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:center">
+    <div>
+      <div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--accent);letter-spacing:3px;text-transform:uppercase;margin-bottom:20px">L'opportunité</div>
+      <div style="font-size:clamp(28px,3vw,42px);font-weight:900;letter-spacing:-1.5px;color:var(--ink);line-height:1.1;margin-bottom:20px">
+        Un vide de marché<br>de <em style="font-style:italic;font-weight:300;color:var(--accent)">500 000 places</em>
+      </div>
+      <div style="font-size:16px;color:var(--ink2);line-height:1.8">
+        Sur 800 000 places de parking à Paris intra-muros, environ 500 000 sont privées.
+        Les grands acteurs ne couvrent pas les copropriétés résidentielles.
+        Parkshare est seul sur ce segment.
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:20px">
+      <div style="display:flex;align-items:center;gap:20px;padding:20px;background:rgba(255,255,255,0.03);border-radius:10px;border:1px solid rgba(255,255,255,0.06)">
+        <div style="font-size:32px">🎯</div>
+        <div>
+          <div style="font-size:16px;font-weight:700;color:var(--ink);margin-bottom:4px">Zéro concurrent direct</div>
+          <div style="font-size:14px;color:var(--ink2);line-height:1.6">Aucun acteur ne propose une solution fermée dédiée aux copropriétés résidentielles.</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:20px;padding:20px;background:rgba(255,255,255,0.03);border-radius:10px;border:1px solid rgba(255,255,255,0.06)">
+        <div style="font-size:32px">🚀</div>
+        <div>
+          <div style="font-size:16px;font-weight:700;color:var(--ink);margin-bottom:4px">Zones cibles : métropoles intermédiaires</div>
+          <div style="font-size:14px;color:var(--ink2);line-height:1.6">Lyon, Bordeaux, Nantes, Toulouse, Rennes — forte densité, faible pression concurrentielle.</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:20px;padding:20px;background:rgba(255,255,255,0.03);border-radius:10px;border:1px solid rgba(255,255,255,0.06)">
+        <div style="font-size:32px">📈</div>
+        <div>
+          <div style="font-size:16px;font-weight:700;color:var(--ink);margin-bottom:4px">Modèle Doctolib du parking</div>
+          <div style="font-size:14px;color:var(--ink2);line-height:1.6">Vendre aux gestionnaires professionnels qui servent les résidents — pas aux utilisateurs finaux.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</section>
+
+<!-- COMPRENDRE LE SCORE -->
+<section id="score" style="padding:100px 60px;background:#0a0e18;border-top:1px solid rgba(255,255,255,0.06)">
+
+  <!-- En-tête -->
+  <div class="reveal" style="display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:center;margin-bottom:80px">
+    <div>
+      <div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--accent);letter-spacing:4px;text-transform:uppercase;margin-bottom:20px;display:flex;align-items:center;gap:14px">
+        <span style="width:32px;height:1px;background:var(--accent);display:inline-block"></span>
+        Méthode de scoring
+      </div>
+      <h2 style="font-size:clamp(42px,5vw,68px);font-weight:900;letter-spacing:-3px;line-height:.95;color:var(--ink);margin-bottom:24px">
+        Comment est<br>calculé <em style="font-style:italic;font-weight:300;color:var(--ink2)">le score ?</em>
+      </h2>
+      <p style="font-size:18px;color:var(--ink2);font-weight:300;line-height:1.8;max-width:480px">
+        Chaque commune reçoit un score de <strong style="color:var(--ink)">0 à 100</strong>.
+        Il combine 5 variables clés pondérées selon leur impact commercial pour Parkshare.
+      </p>
+    </div>
+    <!-- Formule visuelle -->
+    <div style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:36px">
+      <div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--ink3);letter-spacing:3px;text-transform:uppercase;margin-bottom:24px">Formule</div>
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <span style="font-size:16px;color:var(--ink2)">🏘️ Taille des copropriétés</span>
+          <span style="font-family:'DM Mono',monospace;font-size:22px;font-weight:700;color:var(--accent)">25%</span>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <span style="font-size:16px;color:var(--ink2)">🚗 Taux de motorisation</span>
+          <span style="font-family:'DM Mono',monospace;font-size:22px;font-weight:700;color:var(--accent)">20%</span>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <span style="font-size:16px;color:var(--ink2)">🏢 Logements collectifs</span>
+          <span style="font-family:'DM Mono',monospace;font-size:22px;font-weight:700;color:var(--accent)">20%</span>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <span style="font-size:16px;color:var(--ink2)">🤝 Concentration syndic</span>
+          <span style="font-family:'DM Mono',monospace;font-size:22px;font-weight:700;color:var(--accent)">20%</span>
+        </div>
+        <div style="height:1px;background:rgba(255,255,255,0.06)"></div>
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <span style="font-size:16px;color:var(--ink2)">🏗️ Part HLM (OPH/ESH)</span>
+          <span style="font-family:'DM Mono',monospace;font-size:22px;font-weight:700;color:var(--accent)">15%</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ce que mesure chaque variable -->
+  <div class="reveal" style="margin-bottom:64px">
+    <div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--ink3);letter-spacing:3px;text-transform:uppercase;margin-bottom:32px">Ce que mesure chaque variable</div>
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:2px;border-radius:12px;overflow:hidden;background:rgba(255,255,255,0.04)">
+
+      <div style="background:#0a0e18;padding:36px 24px;border-right:1px solid rgba(255,255,255,0.06)">
+        <div style="font-size:32px;margin-bottom:20px">🏘️</div>
+        <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--accent);letter-spacing:2px;text-transform:uppercase;margin-bottom:12px">25% du score</div>
+        <div style="font-size:17px;font-weight:700;color:var(--ink);margin-bottom:14px;line-height:1.3">Taille des copropriétés</div>
+        <div style="font-size:15px;color:var(--ink2);line-height:1.8">Plus la copropriété est grande en nombre de lots, plus le contrat Parkshare génère de revenus. C'est la variable la plus pondérée.</div>
+      </div>
+
+      <div style="background:#0a0e18;padding:36px 24px;border-right:1px solid rgba(255,255,255,0.06)">
+        <div style="font-size:32px;margin-bottom:20px">🚗</div>
+        <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--accent);letter-spacing:2px;text-transform:uppercase;margin-bottom:12px">20% du score</div>
+        <div style="font-size:17px;font-weight:700;color:var(--ink);margin-bottom:14px;line-height:1.3">Taux de motorisation</div>
+        <div style="font-size:15px;color:var(--ink2);line-height:1.8">Nombre de voitures par ménage. Sans voiture, il n'y a pas de besoin de stationnement — ce taux valide que le produit est utile dans la commune.</div>
+      </div>
+
+      <div style="background:#0a0e18;padding:36px 24px;border-right:1px solid rgba(255,255,255,0.06)">
+        <div style="font-size:32px;margin-bottom:20px">🏢</div>
+        <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--accent);letter-spacing:2px;text-transform:uppercase;margin-bottom:12px">20% du score</div>
+        <div style="font-size:17px;font-weight:700;color:var(--ink);margin-bottom:14px;line-height:1.3">Logements collectifs</div>
+        <div style="font-size:15px;color:var(--ink2);line-height:1.8">Part de logements en immeuble collectif. Une maison individuelle n'est pas une copropriété — ce taux filtre les zones hors cible.</div>
+      </div>
+
+      <div style="background:#0a0e18;padding:36px 24px;border-right:1px solid rgba(255,255,255,0.06)">
+        <div style="font-size:32px;margin-bottom:20px">🤝</div>
+        <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--accent);letter-spacing:2px;text-transform:uppercase;margin-bottom:12px">20% du score</div>
+        <div style="font-size:17px;font-weight:700;color:var(--ink);margin-bottom:14px;line-height:1.3">Concentration syndic</div>
+        <div style="font-size:15px;color:var(--ink2);line-height:1.8">Part des copropriétés gérées par le même syndic. Un seul rendez-vous commercial peut déclencher des dizaines de déploiements simultanés.</div>
+      </div>
+
+      <div style="background:#0a0e18;padding:36px 24px">
+        <div style="font-size:32px;margin-bottom:20px">🏗️</div>
+        <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--accent);letter-spacing:2px;text-transform:uppercase;margin-bottom:12px">15% du score</div>
+        <div style="font-size:17px;font-weight:700;color:var(--ink);margin-bottom:14px;line-height:1.3">Part HLM (OPH/ESH)</div>
+        <div style="font-size:15px;color:var(--ink2);line-height:1.8">Part de logements gérés par un bailleur social. Ils décident seuls, sans vote en assemblée générale — déploiement en quelques semaines.</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Échelle d'interprétation -->
+  <div class="reveal" style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:48px">
+    <div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--ink3);letter-spacing:3px;text-transform:uppercase;margin-bottom:32px">Échelle d'interprétation du score</div>
+
+    <div style="display:flex;gap:6px;height:64px;margin-bottom:40px">
+      <div style="flex:4;background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.2);border-radius:10px;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:14px;color:#ef4444;font-weight:600;letter-spacing:1px">
+        0 — 24 &nbsp;·&nbsp; Faible
+      </div>
+      <div style="flex:4;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.2);border-radius:10px;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:14px;color:#f59e0b;font-weight:600;letter-spacing:1px">
+        24 — 41 &nbsp;·&nbsp; Moyen
+      </div>
+      <div style="flex:2;background:rgba(200,245,66,0.08);border:1px solid rgba(200,245,66,0.3);border-radius:10px;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:14px;color:var(--accent);font-weight:700;letter-spacing:1px">
+        42 — 60 &nbsp;·&nbsp; Élevé ★
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:40px">
+      <div>
+        <div style="font-size:13px;font-family:'DM Mono',monospace;color:#ef4444;letter-spacing:2px;text-transform:uppercase;margin-bottom:14px">🔴 Zone faible</div>
+        <div style="font-size:16px;color:var(--ink2);line-height:1.8">Peu de copropriétés, faible motorisation ou majorité de maisons individuelles. Pas une priorité pour la prospection Parkshare.</div>
+      </div>
+      <div>
+        <div style="font-size:13px;font-family:'DM Mono',monospace;color:#f59e0b;letter-spacing:2px;text-transform:uppercase;margin-bottom:14px">🟡 Zone moyenne</div>
+        <div style="font-size:16px;color:var(--ink2);line-height:1.8">Potentiel intéressant mais pas optimal. À prospecter en second lieu, une fois que les zones élevées sont couvertes.</div>
+      </div>
+      <div>
+        <div style="font-size:13px;font-family:'DM Mono',monospace;color:var(--accent);letter-spacing:2px;text-transform:uppercase;margin-bottom:14px">🟢 Zone élevée</div>
+        <div style="font-size:16px;color:var(--ink2);line-height:1.8">Combinaison optimale des 5 variables. Prospecter en priorité absolue — contacter le syndic dominant immédiatement.</div>
+      </div>
+    </div>
+  </div>
+
+</section>
+
+<!-- INSIGHTS -->
+<section id="insights">
+  <div class="insights-header reveal">
+    <h2>Trois insights<br><em>stratégiques</em></h2>
+    <p>Les hypothèses métier qui structurent notre scoring et différencient notre approche</p>
+  </div>
+  <div class="insights-list">
+    <div class="insight-item reveal">
+      <div class="insight-num">01</div>
+      <div>
+        <div class="insight-tag">Concentration syndic</div>
+        <div class="insight-title">Un rendez-vous, des dizaines de déploiements</div>
+        <div class="insight-text">Foncia, Nexity et leurs équivalents régionaux gèrent des centaines voire des milliers de copropriétés. Une zone où 60% des copropriétés partagent le même syndic professionnel vaut stratégiquement bien plus qu'une zone avec la même densité mais des syndics bénévoles dispersés.</div>
+      </div>
+      <div class="insight-arrow">→</div>
+    </div>
+    <div class="insight-item reveal d1">
+      <div class="insight-num">02</div>
+      <div>
+        <div class="insight-tag">Bailleurs sociaux OPH/ESH</div>
+        <div class="insight-title">Déploiement sans friction légale</div>
+        <div class="insight-text">Dans une copropriété classique, modifier l'usage des places de stationnement nécessite un vote en assemblée générale à majorité absolue — un processus qui peut prendre des mois. Les OPH et ESH, propriétaires à 100% de leurs bâtiments, peuvent déployer Parkshare sur décision interne en quelques semaines.</div>
+      </div>
+      <div class="insight-arrow">→</div>
+    </div>
+    <div class="insight-item reveal d2">
+      <div class="insight-num">03</div>
+      <div>
+        <div class="insight-tag">Pression concurrentielle</div>
+        <div class="insight-title">Éviter Paris, cibler les métropoles intermédiaires</div>
+        <div class="insight-text">Zenpark (13 millions d'usagers/an) est fortement implanté à Paris centre et La Défense. En revanche, les métropoles de taille intermédiaire — Lyon, Bordeaux, Nantes, Toulouse, Rennes — offrent une densité de copropriétés suffisante avec une pression concurrentielle nettement inférieure.</div>
+      </div>
+      <div class="insight-arrow">→</div>
+    </div>
+  </div>
+</section>
+
+<!-- TOP 3 -->
+<section id="top3" style="background:var(--bg2);border-top:1px solid var(--border)">
+  <div class="top3-header reveal">
+    <h2>Les <em>trois</em> zones prioritaires</h2>
+    <p>Classement par score de potentiel commercial — données réelles du pipeline</p>
+  </div>
+  <div class="top3-grid">
+    <div class="top3-card gold reveal">
+      <div class="top3-rank"><div class="top3-rank-num">1</div> Zone prioritaire</div>
+      <div class="top3-commune" id="top1-commune">—</div>
+      <div class="top3-region" id="top1-region">—</div>
+      <div class="top3-score-label">Score potentiel</div>
+      <div class="top3-score" id="top1-score">—</div>
+      <div class="top3-score-max">/ 100</div>
+      <div class="top3-stats">
+        <div class="top3-stat"><span class="top3-stat-label">Copropriétés</span><span class="top3-stat-val" id="top1-copros">—</span></div>
+        <div class="top3-stat"><span class="top3-stat-label">Syndic dominant</span><span class="top3-stat-val" id="top1-syndic">—</span></div>
+      </div>
+    </div>
+    <div class="top3-card reveal d1">
+      <div class="top3-rank"><div class="top3-rank-num silver">2</div> Zone prioritaire</div>
+      <div class="top3-commune" id="top2-commune">—</div>
+      <div class="top3-region" id="top2-region">—</div>
+      <div class="top3-score-label">Score potentiel</div>
+      <div class="top3-score silver" id="top2-score">—</div>
+      <div class="top3-score-max">/ 100</div>
+      <div class="top3-stats">
+        <div class="top3-stat"><span class="top3-stat-label">Copropriétés</span><span class="top3-stat-val" id="top2-copros">—</span></div>
+        <div class="top3-stat"><span class="top3-stat-label">Syndic dominant</span><span class="top3-stat-val" id="top2-syndic">—</span></div>
+      </div>
+    </div>
+    <div class="top3-card reveal d2">
+      <div class="top3-rank"><div class="top3-rank-num bronze">3</div> Zone prioritaire</div>
+      <div class="top3-commune" id="top3-commune">—</div>
+      <div class="top3-region" id="top3-region">—</div>
+      <div class="top3-score-label">Score potentiel</div>
+      <div class="top3-score bronze" id="top3-score">—</div>
+      <div class="top3-score-max">/ 100</div>
+      <div class="top3-stats">
+        <div class="top3-stat"><span class="top3-stat-label">Copropriétés</span><span class="top3-stat-val" id="top3-copros">—</span></div>
+        <div class="top3-stat"><span class="top3-stat-label">Syndic dominant</span><span class="top3-stat-val" id="top3-syndic">—</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta">
+  <h2>Explorez<br>les <em>données</em></h2>
+  <p>Naviguez sur la carte interactive, appliquez vos filtres et identifiez les zones prioritaires pour votre prospection commerciale.</p>
+  <div class="cta-actions">
+    <a href="/dashboard" class="btn-primary">Ouvrir le dashboard →</a>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-logo">Park<span>share</span></div>
+  <div class="footer-text">Challenge 48h · 2026</div>
+  <div class="footer-text">Data · Dev · Infra</div>
+</footer>
+
+<script>
+// Nav scroll
+window.addEventListener('scroll', () => {
+  document.getElementById('nav').classList.toggle('scrolled', window.scrollY > 60);
+});
+
+// Scroll reveal — déclenché par IntersectionObserver
+const obs = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); }
+  });
+}, { threshold: 0.1 });
+document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+
+// Chargement données API
+async function loadStats() {
+  try {
+    const res  = await fetch('/api/carte/stats');
+    const data = await res.json();
+    document.getElementById('stat-communes').textContent = Number(data.total_communes).toLocaleString('fr-FR');
+    document.getElementById('stat-score').textContent    = data.score_moyen;
+    document.getElementById('stat-zones').textContent    = Number(data.zones_elevees).toLocaleString('fr-FR');
+    const res2 = await fetch('/api/communes');
+    const communes = await res2.json();
+    const total = communes.reduce((s, c) => s + (c.nb_coproprietes || 0), 0);
+    document.getElementById('stat-copros').textContent   = total.toLocaleString('fr-FR');
+    document.getElementById('hero-communes').textContent = Number(data.total_communes).toLocaleString('fr-FR');
+  } catch(e) { console.warn('API non disponible', e); }
+}
+
+async function loadTop3() {
+  try {
+    const res  = await fetch('/api/classement/resume');
+    const data = await res.json();
+    const fill = (n, d) => {
+      if (!d) return;
+      document.getElementById(`top${n}-commune`).textContent = d.nom_commune || '—';
+      document.getElementById(`top${n}-region`).textContent  = d.region || '—';
+      document.getElementById(`top${n}-score`).textContent   = d.score_potentiel || '—';
+      document.getElementById(`top${n}-copros`).textContent  = Number(d.nb_coproprietes || 0).toLocaleString('fr-FR');
+      document.getElementById(`top${n}-syndic`).textContent  = d.syndic_dominant || '—';
+    };
+    fill(1, data.top1); fill(2, data.top2); fill(3, data.top3);
+  } catch(e) { console.warn('API non disponible', e); }
+}
+
+loadStats();
+loadTop3();
+</script>
+</body>
+</html>
