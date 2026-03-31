@@ -7,7 +7,7 @@ import json
 import os
 from database import get_connection
 
-GEOJSON_PATH = os.path.join(os.path.dirname(__file__), "..", "data", "processed", "communes_scored.geojson")
+GEOJSON_PATH = os.path.join(os.path.dirname(__file__), "data", "processed", "communes_scored.geojson")
 
 
 def get_geojson_complet() -> dict:
